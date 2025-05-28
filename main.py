@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, abort
 
 app = Flask(__name__)
 
@@ -47,16 +47,17 @@ def update_mensagem(id):
 def create_mensagem():
     nova_mensagem = request.get_json()
     mensagens.append(nova_mensagem)
-
     return jsonify(mensagens)
 
 #Endpoint para DELETE
 @app.route('/mensagens/<int:id>', methods=['DELETE'])
 def delete_mensagem(id):
-    for indice, mensagem in enumerate(mensagens):
+    for indice, mensagem in enumerate(mensagens):          
         if mensagem.get('id') == id:
             del mensagens[indice]
             return jsonify(mensagens)
+        
+    abort(404, description="ID não encontrado")
 
-app.run(debug=True)
+app.run(debug=True, port=3000)
 
