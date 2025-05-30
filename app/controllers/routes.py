@@ -1,26 +1,8 @@
-'''
-from flask import Flask, jsonify, request, abort
+from flask import Blueprint, jsonify, abort, request
+from app import app
+from app import db
 
-app = Flask(__name__)
-
-#Lista para mensagens
-mensagens = [
-    {
-        'id': 1,
-        'Nome': 'Rosangela',
-        'Mensagem': 'Opa, tudo bem?'
-    },
-    {
-        'id': 2,
-        'Nome': 'Maria',
-        'Mensagem': 'Ola, tudo bem?'
-    },
-    {
-        'id': 3,
-        'Nome': 'Sophia',
-        'Mensagem': 'Oii, tudo bem?'
-    },
-]
+msg_bp = Blueprint('mensagens', __name__)
 
 #Endpoint para READ - ALL
 @app.route('/mensagens', methods=['GET'])
@@ -59,9 +41,3 @@ def delete_mensagem(id):
         if mensagem.get('id') == id:
             del mensagens[indice]
             return jsonify(mensagens)
-        
-    abort(404, description="ID não encontrado")
-
-app.run(debug=True, port=3000)
-
-'''
