@@ -1,43 +1,22 @@
-from flask import Blueprint, jsonify, abort, request
-from app import app
+from flask import Blueprint, jsonify, request
+from app.models.caixa_de_entrada import Entrada
 from app import db
 
 msg_bp = Blueprint('mensagens', __name__)
 
 #Endpoint para READ - ALL
-@app.route('/mensagens', methods=['GET'])
+@msg_bp.route('/mensagens', methods=['GET', 'POST'])
 def read_all():
-    return jsonify(mensagens)
-
-#Endpoint para READ - ONE
-@app.route('/mensagens/<int:id>', methods=['GET'])
-def read_one(id):
-    for mensagem in mensagens:
-        if mensagem.get('id') == id:
-            return jsonify(mensagem)
-    abort(404, description="ID não encontrado")
-    
-#Endpoint para UPDATE
-@app.route('/mensagens/<int:id>', methods=['PUT'])
-def update_mensagem(id):
-    mensagem_atualizada = request.get_json()
-    for indice, mensagem in enumerate(mensagens):
-        if mensagem.get('id') == id:
-            mensagens[indice].update(mensagem_atualizada)
-            return jsonify(mensagens[indice])
-    abort(404, description="ID não encontrado")
+    mensagens = Entrada.query.all()
+    return jsonify([Entrada.json() for mensagem in mensagens])
 
 #Endpoint para CREATE
-@app.route('/mensagens', methods=['POST'])
+@msg_bp.route('/mensagens', methods=['POST'])
 def create_mensagem():
-    nova_mensagem = request.get_json()
-    mensagens.append(nova_mensagem)
-    return jsonify(mensagens)
+    data = request.get_json()
+    nova_mensagem = Entrada(nome=data['nome'], mensagem=data['mensagem'])
+    db.session.add(nova_mensagem)
+    db.session.commit()
+    return jsonify(nova_mensagem.json()), 201
+    
 
-#Endpoint para DELETE
-@app.route('/mensagens/<int:id>', methods=['DELETE'])
-def delete_mensagem(id):
-    for indice, mensagem in enumerate(mensagens):          
-        if mensagem.get('id') == id:
-            del mensagens[indice]
-            return jsonify(mensagens)
