@@ -1,6 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from app import db
 
 class Entrada(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)

@@ -5,10 +5,10 @@ from app import db
 msg_bp = Blueprint('mensagens', __name__)
 
 #Endpoint para READ - ALL
-@msg_bp.route('/mensagens', methods=['GET', 'POST'])
+@msg_bp.route('/mensagens', methods=['GET'])
 def read_all():
     mensagens = Entrada.query.all()
-    return jsonify([Entrada.json() for mensagem in mensagens])
+    return jsonify([mensagem.json() for mensagem in mensagens])
 
 #Endpoint para CREATE
 @msg_bp.route('/mensagens', methods=['POST'])
