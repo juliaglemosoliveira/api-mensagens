@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models.caixa_de_entrada import Entrada
+from app.models.mensagens import Entrada
 from app import db
 
 msg_bp = Blueprint('mensagens', __name__)
@@ -14,8 +14,10 @@ def read_all():
 @msg_bp.route('/mensagens/<int:id>', methods=['GET'])
 def read_one(id):
     mensagem = Entrada.query.get(id)
+
     if mensagem:
         return jsonify(mensagem.json()), 200
+    
     return {"Mensagem": "ID não encontrado, tente outro!"}, 404
 
 #Endpoint para CREATE
@@ -31,6 +33,22 @@ def create_mensagem():
 @msg_bp.route('/mensagens/<int:id>', methods=['DELETE'])
 def delete_msg(id):
     mensagem = Entrada.query.get(id)
-    db.session.delete(mensagem)
+
+    if mensagem:
+        db.session.delete(mensagem)
+        db.session.commit()
+        return {"Mensagem": "Mensagem excluída com sucesso!"}
+    
+    return {"Mensagem": "Mensagem não encontrada, tente outro ID!"}
+
+#Endpoint para UPDATE
+@msg_bp.route('/mensagens/<int:id>', methods=['PUT'])
+def upadte_msg(id):
+    data = request.get_json()
+    mensagem = Entrada.query.get(id)
+    
+    mensagem.nome = data.get('nome', mensagem.nome)
+    mensagem.mensagem = data.get('mensagem', mensagem.mensagem)
+
     db.session.commit()
-    return {"Mensagem": "Mensagem excluída com sucesso!"}
+    return jsonify(mensagem.json())

@@ -10,8 +10,8 @@ def create_app():
 
     db.init_app(app)
 
-    from app.models.caixa_de_entrada import Entrada
-    from app.controllers.routes import msg_bp
+    from app.models.mensagens import Entrada
+    from app.controllers.mensagens import msg_bp
     app.register_blueprint(msg_bp)
 
     with app.app_context():
