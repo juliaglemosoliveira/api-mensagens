@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models.mensagens import Entrada
+from app.models.mensagens import Mensagem
 from app import db
 
 msg_bp = Blueprint('mensagens', __name__)
@@ -7,13 +7,13 @@ msg_bp = Blueprint('mensagens', __name__)
 #Endpoint para READ - ALL
 @msg_bp.route('/mensagens', methods=['GET'])
 def read_all():
-    mensagens = Entrada.query.all()
+    mensagens = Mensagem.query.all()
     return jsonify([mensagem.json() for mensagem in mensagens]), 200
 
 #Endpoint para READ ONE
 @msg_bp.route('/mensagens/<int:id>', methods=['GET'])
 def read_one(id):
-    mensagem = Entrada.query.get(id)
+    mensagem = Mensagem.query.get(id)
 
     if mensagem:
         return jsonify(mensagem.json()), 200
@@ -24,7 +24,7 @@ def read_one(id):
 @msg_bp.route('/mensagens', methods=['POST'])
 def create_mensagem():
     data = request.get_json()
-    nova_mensagem = Entrada(nome=data['nome'], mensagem=data['mensagem'])
+    nova_mensagem = Mensagem(nome=data['nome'], mensagem=data['mensagem'])
     db.session.add(nova_mensagem)
     db.session.commit()
     return jsonify(nova_mensagem.json()), 201
@@ -32,7 +32,7 @@ def create_mensagem():
 #Endpoint para DELETE
 @msg_bp.route('/mensagens/<int:id>', methods=['DELETE'])
 def delete_msg(id):
-    mensagem = Entrada.query.get(id)
+    mensagem = Mensagem.query.get(id)
 
     if mensagem:
         db.session.delete(mensagem)
@@ -45,7 +45,7 @@ def delete_msg(id):
 @msg_bp.route('/mensagens/<int:id>', methods=['PUT'])
 def upadte_msg(id):
     data = request.get_json()
-    mensagem = Entrada.query.get(id)
+    mensagem = Mensagem.query.get(id)
     
     mensagem.nome = data.get('nome', mensagem.nome)
     mensagem.mensagem = data.get('mensagem', mensagem.mensagem)

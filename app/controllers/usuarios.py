@@ -1,8 +1,6 @@
 from flask import Blueprint, request, jsonify
-from email_validator import validate_email, EmailNotValidError
 from app import db
-from models.usuario import Usuario
-from models.usuario import validar_senha
+from app.models.usuarios import Usuario
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -14,20 +12,6 @@ def criar_usuario():
     email = data.get('email')
     nome = data.get('nome')
     senha = data.get('senha')
-
-    if not nome:
-        return jsonify({'erro': 'Nome é obrigatório'}), 400
-
-    try:
-        validate_email(email)  # Valida formato do email
-    except EmailNotValidError:
-        return jsonify({'erro': 'Email inválido'}), 400
-
-    if Usuario.query.filter_by(email=email).first():
-        return jsonify({'erro': 'Email já cadastrado'}), 400
-
-    if not validar_senha(senha):
-        return jsonify({'erro': 'Senha fraca. Deve ter 8 caracteres, número, maiúscula, minúscula e especial.'}), 400
 
     novo = Usuario(email=email, nome=nome, senha=senha)
     db.session.add(novo)
@@ -73,21 +57,6 @@ def atualizar_usuario(id):
     nome = data.get('nome', usuario.nome)
     email = data.get('email', usuario.email)
     senha = data.get('senha', usuario.senha)
-
-    if not nome:
-        return jsonify({'erro': 'Nome é obrigatório'}), 400
-
-    try:
-        validate_email(email)
-    except EmailNotValidError:
-        return jsonify({'erro': 'Email inválido'}), 400
-
-    email_existente = Usuario.query.filter_by(email=email).first()
-    if email_existente and email_existente.id != id:
-        return jsonify({'erro': 'Email já cadastrado por outro usuário'}), 400
-
-    if senha != usuario.senha and not validar_senha(senha):
-        return jsonify({'erro': 'Senha fraca'}), 400
 
     usuario.nome = nome
     usuario.email = email
