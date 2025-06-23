@@ -13,11 +13,29 @@ def criar_usuario():
     nome = data.get('nome')
     senha = data.get('senha')
 
+    erros = []
+
+    #validação de email
+    email_valido = Usuario.validar_email(email)
+    if email_valido is not True:
+        erros.append(email_valido)
+    
+    #validação da senha
+    senha_valida = Usuario.validar_senha(senha)
+    if senha_valida is not True:
+        erros.append(senha_valida)
+    
+    if erros:
+        return jsonify({"erros":erros}), 400
+
+    if Usuario.query.filter_by(email=email).first():
+        return {"mensagem":"E-mail já existente, por favor, tente outro!"}, 400
+
     novo = Usuario(email=email, nome=nome, senha=senha)
     db.session.add(novo)
     db.session.commit()
 
-    return jsonify({'mensagem': 'Usuário criado com sucesso', 'id': novo.id}), 201
+    return jsonify(novo.json()), 201
 
 # --------------------------
 # READ - Buscar todos os usuários
@@ -39,24 +57,41 @@ def listar_usuarios():
 # --------------------------
 @user_bp.route('/usuarios/<int:id>', methods=['GET'])
 def obter_usuario(id):
-    usuario = Usuario.query.get_or_404(id)
-    return jsonify({
-        'id': usuario.id,
-        'email': usuario.email,
-        'nome': usuario.nome
-    })
+    usuario = Usuario.query.get(id)
+
+    if usuario:
+        return jsonify(usuario.json()), 200
+    return jsonify({"mensagem": "Nenhum usuário encontrado referente a esse ID , tente outro, por favor!"})
 
 # --------------------------
 # UPDATE - Atualizar usuário
 # --------------------------
 @user_bp.route('/usuarios/<int:id>', methods=['PUT'])
 def atualizar_usuario(id):
-    usuario = Usuario.query.get_or_404(id)
+    usuario = Usuario.query.get(id)
+    if not usuario:
+        return jsonify({"mensagem":"usuário com esse ID não existe!"}), 404
+    
     data = request.get_json()
 
     nome = data.get('nome', usuario.nome)
     email = data.get('email', usuario.email)
     senha = data.get('senha', usuario.senha)
+
+    erros = []
+
+     #validação de email
+    email_valido = Usuario.validar_email(email)
+    if email_valido is not True:
+        erros.append(email_valido)
+    
+    #validação da senha
+    senha_valida = Usuario.validar_senha(senha)
+    if senha_valida is not True:
+        erros.append(senha_valida)
+
+    if erros:
+        return jsonify({"erros":erros}), 400
 
     usuario.nome = nome
     usuario.email = email
@@ -68,7 +103,12 @@ def atualizar_usuario(id):
 
 @user_bp.route('/usuarios/<int:id>', methods=['DELETE'])
 def deletar_usuario(id):
-    usuario = Usuario.query.get_or_404(id)
-    db.session.delete(usuario)
-    db.session.commit()
-    return jsonify({'mensagem': 'Usuário deletado com sucesso'})
+    usuario = Usuario.query.get(id)
+
+    if usuario:
+
+        db.session.delete(usuario)
+        db.session.commit()
+        return jsonify({'mensagem': 'Usuário deletado com sucesso'})
+    
+    return jsonify({"mensagem":"Nenhum usuário encontrado referente a esse ID , tente outro, por favor!"})

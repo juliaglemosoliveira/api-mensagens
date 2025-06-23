@@ -46,9 +46,11 @@ def delete_msg(id):
 def upadte_msg(id):
     data = request.get_json()
     mensagem = Mensagem.query.get(id)
-    
-    mensagem.nome = data.get('nome', mensagem.nome)
-    mensagem.mensagem = data.get('mensagem', mensagem.mensagem)
 
-    db.session.commit()
-    return jsonify(mensagem.json())
+    if mensagem:
+        mensagem.nome = data.get('nome', mensagem.nome)
+        mensagem.mensagem = data.get('mensagem', mensagem.mensagem)
+
+        db.session.commit()
+        return jsonify(mensagem.json())
+    return jsonify({"mensagem":"Nenhuma mensagem referente a esse ID foi encontrada, por favor, tente outro!"})
