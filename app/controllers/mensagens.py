@@ -18,13 +18,19 @@ def read_one(id):
     if mensagem:
         return jsonify(mensagem.json()), 200
     
-    return {"Mensagem": "ID não encontrado, tente outro!"}, 404
+    return {"Mensagem":"Mensagem não encontrada, tente outro ID!"}, 404
 
 #Endpoint para CREATE
 @msg_bp.route('/mensagens', methods=['POST'])
 def create_mensagem():
     data = request.get_json()
-    nova_mensagem = Mensagem(nome=data['nome'], mensagem=data['mensagem'])
+
+    data_formatada = {k.lower(): v for k, v in data.items()}
+
+    if 'nome' not in data_formatada or "mensagem" not in data_formatada:
+        return {"Mensagem":"O campo deve ter obrigatoriamente os campos de 'nome' e 'mensagem' preenchidos adequadamente!"}, 400
+
+    nova_mensagem = Mensagem(nome=data['nome', 'Nome'], mensagem=data['mensagem', 'Mensagem'])
     db.session.add(nova_mensagem)
     db.session.commit()
     return jsonify(nova_mensagem.json()), 201
@@ -37,20 +43,23 @@ def delete_msg(id):
     if mensagem:
         db.session.delete(mensagem)
         db.session.commit()
-        return {"Mensagem": "Mensagem excluída com sucesso!"}
+        return {"Mensagem":"Mensagem excluída com sucesso!"}, 200
     
-    return {"Mensagem": "Mensagem não encontrada, tente outro ID!"}
+    return {"Mensagem":"Mensagem não encontrada, tente outro ID!"}, 404
 
 #Endpoint para UPDATE
 @msg_bp.route('/mensagens/<int:id>', methods=['PUT'])
 def upadte_msg(id):
-    data = request.get_json()
     mensagem = Mensagem.query.get(id)
+    data = request.get_json()
+    if not data:
+        return jsonify({"Mensagem":"Os dados enviados devem estar no formato adequado(JSON)"})
+    
 
     if mensagem:
-        mensagem.nome = data.get('nome', mensagem.nome)
-        mensagem.mensagem = data.get('mensagem', mensagem.mensagem)
+        mensagem.nome = data.get('nome','Nome', mensagem.nome)
+        mensagem.mensagem = data.get('mensagem', 'Mensagem', mensagem.mensagem)
 
         db.session.commit()
-        return jsonify(mensagem.json())
-    return jsonify({"mensagem":"Nenhuma mensagem referente a esse ID foi encontrada, por favor, tente outro!"})
+        return jsonify(mensagem.json()), 200
+    return jsonify({"Mensagem":"Mensagem não encontrada, tente outro ID!"}), 404
