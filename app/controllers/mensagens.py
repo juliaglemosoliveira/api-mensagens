@@ -30,7 +30,7 @@ def create_mensagem():
     if 'nome' not in data_formatada or "mensagem" not in data_formatada:
         return {"Mensagem":"O campo deve ter obrigatoriamente os campos de 'nome' e 'mensagem' preenchidos adequadamente!"}, 400
 
-    nova_mensagem = Mensagem(nome=data['nome', 'Nome'], mensagem=data['mensagem', 'Mensagem'])
+    nova_mensagem = Mensagem(nome=data_formatada['nome'], mensagem=data_formatada['mensagem'])
     db.session.add(nova_mensagem)
     db.session.commit()
     return jsonify(nova_mensagem.json()), 201
@@ -55,6 +55,9 @@ def upadte_msg(id):
     if not data:
         return jsonify({"Mensagem":"Os dados enviados devem estar no formato adequado(JSON)"})
     
+     # Bloqueia alteração do usuário/autor
+    if 'usuario' in data:
+        return jsonify({"Mensagem": "Não é permitido alterar o autor de uma mensagem."}), 400
 
     if mensagem:
         mensagem.nome = data.get('nome','Nome', mensagem.nome)
@@ -63,3 +66,4 @@ def upadte_msg(id):
         db.session.commit()
         return jsonify(mensagem.json()), 200
     return jsonify({"Mensagem":"Mensagem não encontrada, tente outro ID!"}), 404
+
