@@ -25,7 +25,7 @@ def read_one(id):
 def create_mensagem():
     data = request.get_json()
 
-    data_formatada = {k.lower(): v for k, v in data.items()}
+    data_formatada = {chave.lower(): valor for chave, valor in data.items()}
 
     if 'nome' not in data_formatada or "mensagem" not in data_formatada:
         return {"Mensagem":"O campo deve ter obrigatoriamente os campos de 'nome' e 'mensagem' preenchidos adequadamente!"}, 400

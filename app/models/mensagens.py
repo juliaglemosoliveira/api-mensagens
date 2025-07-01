@@ -1,5 +1,6 @@
 from app import db
 from datetime import datetime
+from app.utils.utils import converter_fuso
 
 class Mensagem(db.Model):
     __tablename__ = 'mensagens'
@@ -11,5 +12,5 @@ class Mensagem(db.Model):
 
     comentarios = db.relationship('Comentario', backref='mensagens', lazy=True)
 
-    def json(self):
-        return {"id": self.id, "nome": self.nome, "mensagem": self.mensagem, "data_hora":self.data_hora, "autor": self.autor}
+    def json(self, tz_cliente='America/Sao_Paulo'):
+        return {"id": self.id, "nome": self.nome, "mensagem": self.mensagem, "data_hora":converter_fuso(self.data_hora, tz_cliente), "autor": self.autor}

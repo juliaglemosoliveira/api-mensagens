@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.usuarios import Usuario
+from app.utils.utils import validar_email, validar_senha
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -16,12 +17,12 @@ def criar_usuario():
     erros = []
 
     #validação de email
-    email_valido = Usuario.validar_email(email)
+    email_valido = validar_email(email)
     if email_valido is not True:
         erros.append(email_valido)
     
     #validação da senha
-    senha_valida = Usuario.validar_senha(senha)
+    senha_valida = validar_senha(senha)
     if senha_valida is not True:
         erros.append(senha_valida)
     
@@ -29,7 +30,7 @@ def criar_usuario():
         return jsonify({"erros":erros}), 400
 
     if Usuario.query.filter_by(email=email).first():
-        return {"mensagem":"E-mail já existe, por favor, tente outro!"}, 409
+        return {"Mensagem":"E-mail já existe, por favor, tente outro!"}, 409
 
     novo = Usuario(email=email, nome=nome, senha=senha)
     db.session.add(novo)
