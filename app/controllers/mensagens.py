@@ -13,20 +13,24 @@ def read_all():
 #Endpoint para READ ONE
 @msg_bp.route('/mensagens/<int:id>', methods=['GET'])
 def read_one(id):
+    #Verifica se a mensagem existe
     mensagem = Mensagem.query.get(id)
-
+    #Caso ela exista, retorna um json
     if mensagem:
         return jsonify(mensagem.json()), 200
-    
+    #Cas onão existe retorna um erro tratado
     return {"Mensagem":"Mensagem não encontrada, tente outro ID!"}, 404
 
 #Endpoint para CREATE
 @msg_bp.route('/mensagens', methods=['POST'])
 def create_mensagem():
+    #Json enviado pelo cliente
     data = request.get_json()
 
+    #Tranforma as chaves da requisição enviada pelo cliente em minusculas, evitando conflitos.
     data_formatada = {chave.lower(): valor for chave, valor in data.items()}
 
+    
     if 'nome' not in data_formatada or "mensagem" not in data_formatada:
         return {"Mensagem":"O campo deve ter obrigatoriamente os campos de 'nome' e 'mensagem' preenchidos adequadamente!"}, 400
 
@@ -60,8 +64,8 @@ def upadte_msg(id):
         return jsonify({"Mensagem": "Não é permitido alterar o autor de uma mensagem."}), 400
 
     if mensagem:
-        mensagem.nome = data.get('nome','Nome', mensagem.nome)
-        mensagem.mensagem = data.get('mensagem', 'Mensagem', mensagem.mensagem)
+        mensagem.nome = data.get('nome', mensagem.nome)
+        mensagem.mensagem = data.get('mensagem', mensagem.mensagem)
 
         db.session.commit()
         return jsonify(mensagem.json()), 200

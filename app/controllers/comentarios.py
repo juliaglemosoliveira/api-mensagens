@@ -10,14 +10,19 @@ cmt_bp = Blueprint('cmt_bp', __name__)
 def create_comentario():
 
     data = request.get_json()
+    if not data:
+        return jsonify({"Mensagem":"Os dados enviados devem estar no formato adequado(JSON)"}), 400
+
     data_formatada = {chave.lower(): valor for chave, valor in data.items()}
     campos_obrigatorios = ['comentario', 'mensagem_id']
 
     if not all(campo in data_formatada for campo in campos_obrigatorios):
-        return {'Mensagem': "Os campos de 'comentario' e 'mensagem_id' devem ser preenchidos adequadamente!"}, 400
+        return jsonify({'Mensagem': "Os campos de 'comentario' e 'mensagem_id' devem ser preenchidos adequadamente!"}), 400
 
-    comentario = data_formatada('comentario')
-    mensagem_id = data_formatada('mensagem_id')
+    
+
+    comentario = data_formatada.get('comentario')
+    mensagem_id = data_formatada.get('mensagem_id')
 
     # Validação: mensagem precisa existir
     mensagem = Mensagem.query.get(mensagem_id)
@@ -57,7 +62,7 @@ def update_comentario(id):
         return jsonify({'Mensagem': 'Nenhum comentário com esse ID, tente outro!'}), 404
 
     data = request.get_json()
-    data_formatada = {chave.lower():valor for chave, valor in data}
+    data_formatada = {chave.lower():valor for chave, valor in data.items()}
 
     if 'comentario' not in data_formatada:
         return jsonify({'Mensagem':"O campo 'comentario' deve ser preenchido adequadamente"})
@@ -82,9 +87,9 @@ def delete_comentario(id):
     email_autor = data.get('email')
 
     #Verificação: Confere se o usuario que está tentando apagar o comentário é o autor.
-    usuario = Usuario.query.filter_by(email=email_autor, senha=senha_autor).first
-    if not usuario:
-        return jsonify({'Mensagem': 'Senha ou email incorretos, por favor, digite os valores corretamente.'}), 400
+    usuario = Usuario.query.filter_by(email=email_autor, senha=senha_autor).first()
+    if None in usuario :
+        return jsonify({'Mensagem': 'Senha ou email incorretos, por favor, digite-os valores corretamente.'}), 400
     
     if comentario.autor != usuario.id:
         return jsonify({'Mensagem': 'Você não tem permissão para apagar esse comentário!'}), 403        

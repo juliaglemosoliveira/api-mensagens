@@ -74,12 +74,12 @@ def atualizar_usuario(id):
     erros = []
 
      #validação de email
-    email_valido = Usuario.validar_email(email)
+    email_valido = validar_email(email)
     if email_valido is not True:
         erros.append(email_valido)
     
     #validação da senha
-    senha_valida = Usuario.validar_senha(senha)
+    senha_valida = validar_senha(senha)
     if senha_valida is not True:
         erros.append(senha_valida)
 
