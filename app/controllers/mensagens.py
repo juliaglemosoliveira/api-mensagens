@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app.models.mensagens import Mensagem
 from app import db
+from werkzeug.exceptions import NotFound
 
 msg_bp = Blueprint('mensagens', __name__)
 
@@ -12,14 +13,16 @@ def read_all():
 
 #Endpoint para READ ONE
 @msg_bp.route('/mensagens/<int:id>', methods=['GET'])
+
 def read_one(id):
+
     #Verifica se a mensagem existe
     mensagem = Mensagem.query.get(id)
     #Caso ela exista, retorna um json
     if mensagem:
         return jsonify(mensagem.json()), 200
-    #Cas onão existe retorna um erro tratado
-    return {"Mensagem":"Mensagem não encontrada, tente outro ID!"}, 404
+    #Caso não exista, ele retorna um erro tratado
+    raise NotFound("Mensagem não encontrada, tente outro ID!")
 
 #Endpoint para CREATE
 @msg_bp.route('/mensagens', methods=['POST'])
