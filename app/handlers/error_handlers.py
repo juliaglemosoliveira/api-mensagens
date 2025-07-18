@@ -1,5 +1,5 @@
 from flask import jsonify
-from werkzeug.exceptions import NotFound, BadRequest
+from werkzeug.exceptions import NotFound, BadRequest, Unauthorized
 
 def register_error_handlers_global(app):
     @app.errorhandler(NotFound)
@@ -22,5 +22,10 @@ def register_error_handlers_msg(msg_bp):
             return jsonify({'Mensagem': descricao}), 400
         
         return jsonify({'Mensagem': 'Requisição mal formada, por favor, envie em um formato JSON adequado.'}), 400
+    
+    @msg_bp.errorhandler(Unauthorized)
+    def error_authenticated(e):
+
+        return jsonify({'Mensagem': str(e)})
     
     
