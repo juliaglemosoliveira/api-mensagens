@@ -1,31 +1,28 @@
 from flask import jsonify
-from werkzeug.exceptions import NotFound, BadRequest, Unauthorized
+from werkzeug.exceptions import NotFound, BadRequest, Conflict
 
 def register_error_handlers_global(app):
     @app.errorhandler(NotFound)
     def error_not_found(e):
         return jsonify({'Mensagem': 'Recurso nao encontrado'}), 404
-
-def register_error_handlers_msg(msg_bp):
-    @msg_bp.errorhandler(BadRequest)
+    
+    @app.errorhandler(BadRequest)
     def error_bad_request(e):
         descricao = getattr(e, 'description', None)
 
-        erros_json = [
-            "Failed to decode JSON object",
-            "Expecting value",
-            "Expecting ',' delimiter",
-            "Expecting property name enclosed in double quotes",
-            "Unterminated string starting at"]
+        if isinstance(descricao, str) and 'Failed to decode JSON object' in descricao:
+            return jsonify({'Mensagem': 'Requisição mal formada, por favor, envie em um formato JSON adequado.'}), 400
 
-        if descricao and descricao != BadRequest.description and not any(error in descricao for error in erros_json):
+        if descricao and descricao != BadRequest.description:
             return jsonify({'Mensagem': descricao}), 400
         
         return jsonify({'Mensagem': 'Requisição mal formada, por favor, envie em um formato JSON adequado.'}), 400
-    
-    @msg_bp.errorhandler(Unauthorized)
-    def error_authenticated(e):
 
-        return jsonify({'Mensagem': str(e)})
+    @app.errorhandler(Conflict)
+    def error_handler_conflict(e):
+        descricao = getattr(e, 'description', None)
+        if descricao and descricao != Conflict.description:
+            return jsonify({'Mensagem': descricao}), 409
+        return jsonify({'Mensagem': 'Conflito de dados.'}), 409
     
     
