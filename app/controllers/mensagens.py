@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 from app.models.mensagens import Mensagem
+from app.models.usuarios import Usuario
 from app import db
-from werkzeug.exceptions import NotFound, BadRequest
+from werkzeug.exceptions import NotFound, BadRequest, Unauthorized, Forbidden
 
 #Blueprint para as mensagens
 msg_bp = Blueprint('mensagens', __name__)
@@ -34,7 +35,13 @@ def create_mensagem():
     data_formatada = {chave.capitalize(): valor for chave, valor in data.items()}
     #Verifica se realmente as chaves estão realmente presentes na requisição, se não estiver, retorna um erro tratado    
     if 'Nome' not in data_formatada or "Mensagem" not in data_formatada:
-        raise BadRequest("O campo deve ter obrigatoriamente os campos de 'Nome' e 'Mensagem' preenchidos adequadamente!")
+        raise BadRequest("Os campos'Nome' e 'Mensagem' devem ser preenchidos adequadamente!")
+    
+    nome = data_formatada.get('Nome')
+    mensagem = data_formatada.get('Mensagem')
+
+    if not nome or not mensagem or not nome.strip() or not mensagem.strip():
+        raise BadRequest('É obrigatório o preenchimento do nome e comentário.')
     
     #Adiciona os valores enviados na requisição ao banco de dados
     nova_mensagem = Mensagem(nome=data_formatada['Nome'], mensagem=data_formatada['Mensagem'])
@@ -49,13 +56,31 @@ def delete_msg(id):
     #Procura a mensagem de acordo com o ID enviado pelo cliente na URL
     mensagem = Mensagem.query.get(id)
     #Caso essa mensagem existe, ela é excluída do banco de dados
-    if mensagem:
-        db.session.delete(mensagem)
-        db.session.commit()
-        #Retorna um confirmação de sucesso para a operação
-        return {"Mensagem":"Mensagem excluída com sucesso!"}, 200
-    #Caso o ID enviado seja referente a uma mensagem que não existe, ele retorna um erro tratado
-    raise NotFound("Mensagem não encontrada, tente outro ID!")
+    if not mensagem:
+        raise NotFound("Mensagem não encontrada, tente outro ID!")
+    
+    #Requisição enviada pelo cliente
+    data = request.get_json()
+
+    #Formatando as chaves para que estejam devidamente capitalizadas, evitando erros
+    data_formatada = {chave.captalize():valor for chave, valor in data.items()}
+
+    senha_autor = data_formatada.get('Senha')
+    email_autor = data_formatada.get('Email')
+
+    #Verificação: Confere se o usuario que está tentando apagar o usuário é o próprio usuário.
+    usuario = Usuario.query.filter_by(email=email_autor, senha=senha_autor).first()
+    if None in usuario :
+        raise Unauthorized('Senha ou email incorretos, por favor, digite-os valores corretamente.')
+    
+    if usuario.autor != usuario.id:
+        raise Forbidden('Você não tem permissão para apagar essa mensagem!')
+
+    db.session.delete(mensagem)
+    db.session.commit()
+    #Retorna um confirmação de sucesso para a operação
+    return {"Mensagem":"Mensagem excluída com sucesso!"}, 200
+    
 
 #Endpoint para UPDATE
 @msg_bp.route('/mensagens/<int:id>', methods=['PUT'])
