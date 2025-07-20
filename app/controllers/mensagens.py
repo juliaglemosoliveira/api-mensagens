@@ -10,7 +10,7 @@ msg_bp = Blueprint('mensagens', __name__)
 #Endpoint para READ - ALL
 @msg_bp.route('/mensagens', methods=['GET'])
 def read_all():
-    #Busca por todas as mensagens
+    #Busca por todas as mensagens no banco de dados
     mensagens = Mensagem.query.all()
     #Retorna um JSON com todas as mensagens
     return jsonify([mensagem.json() for mensagem in mensagens]), 200
@@ -18,9 +18,8 @@ def read_all():
 #Endpoint para READ ONE
 @msg_bp.route('/mensagens/<int:id>', methods=['GET'])
 def read_one(id):
-    #Verifica se a mensagem existe
+    #Procura a mensagem no base no ID que está na URL
     mensagem = Mensagem.query.get(id)
-    #Caso ela exista, retorna a mensagem em JSON
     if mensagem:
         return jsonify(mensagem.json()), 200
     #Caso não exista, ele retorna um erro tratado
@@ -29,17 +28,22 @@ def read_one(id):
 #Endpoint para CREATE
 @msg_bp.route('/mensagens', methods=['POST'])
 def create_mensagem():
-    #JSON enviado pelo cliente
+
+    #Requisição enviado pelo cliente
     data = request.get_json()
+
     #Capitaliza as chaves enviadas na requisição, pelo cliente, evitando conflitos
     data_formatada = {chave.capitalize(): valor for chave, valor in data.items()}
+
     #Verifica se realmente as chaves estão realmente presentes na requisição, se não estiver, retorna um erro tratado    
     if 'Nome' not in data_formatada or "Mensagem" not in data_formatada:
         raise BadRequest("Os campos'Nome' e 'Mensagem' devem ser preenchidos adequadamente!")
     
+    #Acrescente as informações da rquisição as suas respectivas variáveis
     nome = data_formatada.get('Nome')
     mensagem = data_formatada.get('Mensagem')
 
+    #Vericia se os campos Nome e Mensagem estão preenchidos adequadamente
     if not nome or not mensagem or not nome.strip() or not mensagem.strip():
         raise BadRequest('É obrigatório o preenchimento do nome e comentário.')
     
@@ -47,8 +51,39 @@ def create_mensagem():
     nova_mensagem = Mensagem(nome=data_formatada['Nome'], mensagem=data_formatada['Mensagem'])
     db.session.add(nova_mensagem)
     db.session.commit()
-    #Retorna a mensagem que foi adicionada
+    #Retorna a mensagem que foi criada
     return jsonify(nova_mensagem.json()), 201
+
+#Endpoint para UPDATE
+@msg_bp.route('/mensagens/<int:id>', methods=['PUT'])
+def upadte_msg(id):
+
+    #Procura a mensagem de acordo com ID enviado pelo cliente na URL
+    mensagem = Mensagem.query.get(id)
+    #Caso não seja encontrado a mensagem, retorna um erro tratado
+    if not mensagem:
+        raise NotFound("Mensagem não encontrada, tente outro ID!")
+
+    #Requisição enviada pelo cliente
+    data = request.get_json()
+
+    #Capitaliza as chaves enviadas na requisição, pelo cliente, evitando conflitos
+    data_formatada = {chave.capitalize(): valor for chave, valor in data.items()}
+
+    #Verifica se realmente as chaves estão presentes na requisição   
+    if 'Mensagem' not in data_formatada or 'Nome' not in data_formatada:
+        raise BadRequest("O campo deve ter obrigatoriamente os campos de 'Nome' e 'Mensagem' preenchidos adequadamente!")
+    
+    # Bloqueia alteração do usuário/autor, caso o cliente tente enviar a troca pela requisição
+    if 'Autor' in data_formatada:
+        raise BadRequest("Não é permitido alterar o autor de uma mensagem.")
+    
+    #Atualiza as informações no banco de dados(caso não haja dados na requisição, permanece os valores que já estavam)
+    mensagem.nome = data_formatada.get('Nome', mensagem.nome)
+    mensagem.mensagem = data_formatada.get('Mensagem', mensagem.mensagem)
+    db.session.commit()
+    #retorna a mensagem atualizada
+    return jsonify(mensagem.json()), 200
 
 #Endpoint para DELETE
 @msg_bp.route('/mensagens/<int:id>', methods=['DELETE'])
@@ -65,14 +100,15 @@ def delete_msg(id):
     #Formatando as chaves para que estejam devidamente capitalizadas, evitando erros
     data_formatada = {chave.captalize():valor for chave, valor in data.items()}
 
+    #Acrescente as informações da rquisição as suas respectivas variáveis
     senha_autor = data_formatada.get('Senha')
     email_autor = data_formatada.get('Email')
 
-    #Verificação: Confere se o usuario que está tentando apagar o usuário é o próprio usuário.
+    #Verifica se a mensagem que está tentando ser apagada é do próprio usuário.
     usuario = Usuario.query.filter_by(email=email_autor, senha=senha_autor).first()
     if None in usuario :
         raise Unauthorized('Senha ou email incorretos, por favor, digite-os valores corretamente.')
-    
+    #Se as informações enviadas não forem as mesmas do usuário que está tentando ser apagado, o DELETE não é autorizado.
     if usuario.autor != usuario.id:
         raise Forbidden('Você não tem permissão para apagar essa mensagem!')
 
@@ -81,34 +117,3 @@ def delete_msg(id):
     #Retorna um confirmação de sucesso para a operação
     return {"Mensagem":"Mensagem excluída com sucesso!"}, 200
     
-
-#Endpoint para UPDATE
-@msg_bp.route('/mensagens/<int:id>', methods=['PUT'])
-def upadte_msg(id):
-    #Procura a mensagem de acordo com ID enviado pelo cliente na URL
-    mensagem = Mensagem.query.get(id)
-    #Caso não seja encontrado a mensagem, retorna um erro tratado
-    if not mensagem:
-        raise NotFound("Mensagem não encontrada, tente outro ID!")
-
-    #Requisição enviada pelo cliente
-    data = request.get_json()
-    #Capitaliza as chaves enviadas na requisição, pelo cliente, evitando conflitos
-    data_formatada = {chave.capitalize(): valor for chave, valor in data.items()}
-
-    #Verifica se realmente as chaves estão realmente presentes na requisição, se não estiver, retorna um erro tratado    
-    if 'Mensagem' not in data_formatada or 'Nome' not in data_formatada:
-        raise BadRequest("O campo deve ter obrigatoriamente os campos de 'Nome' e 'Mensagem' preenchidos adequadamente!")
-    
-    # Bloqueia alteração do usuário/autor, caso o cliente tente enviar a troca pela requisição
-    if 'Autor' in data_formatada:
-        raise BadRequest("Não é permitido alterar o autor de uma mensagem.")
-    
-    #Se a mensagem realmente existir e estiver nos conformes, ele faz a alteração
-    mensagem.nome = data_formatada.get('Nome', mensagem.nome)
-    mensagem.mensagem = data_formatada.get('Mensagem', mensagem.mensagem)
-    db.session.commit()
-    #retorna a mensagem atualizada
-    return jsonify(mensagem.json()), 200
-    
-

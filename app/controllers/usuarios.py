@@ -6,6 +6,25 @@ from werkzeug.exceptions import BadRequest, Conflict, NotFound, Unauthorized, Fo
 
 user_bp = Blueprint('user_bp', __name__)
 
+#Endpoint para READ-ALL
+@user_bp.route('/usuarios', methods=['GET'])
+def listar_usuarios():
+    #Procura todos os usuarios existentes no banco de dados
+    usuarios = Usuario.query.all()
+    #Retorna todos os usuários que estão no banco de dados no formato JSON
+    return jsonify([user.json() for user in usuarios]), 200
+
+
+# Endpoint para READ-ONE
+@user_bp.route('/usuarios/<int:id>', methods=['GET'])
+def obter_usuario(id):
+    #Procura um usuário especifico, de acordo com o ID que estiver na URL
+    usuario = Usuario.query.get(id)
+    if usuario:
+        return jsonify(usuario.json()), 200
+    #Caso não exista, é retornado um erro tratado
+    raise NotFound("Usuário não existe, tente outro ID!")
+
 #Endpoint para CREATE
 @user_bp.route('/usuarios', methods=['POST'])
 def criar_usuario():
@@ -57,24 +76,6 @@ def criar_usuario():
     #Retorna o usuário que foi adicionado para o cliente
     return jsonify(novo.json()), 201
 
-#Endpoint para READ-ALL
-@user_bp.route('/usuarios', methods=['GET'])
-def listar_usuarios():
-    #Procura todos os usuarios existentes no banco de dados
-    usuarios = Usuario.query.all()
-    #Retorna todos os usuários que estão no banco de dados no formato JSON
-    return jsonify([user.json() for user in usuarios]), 200
-
-# Endpoint para READ-ONE
-@user_bp.route('/usuarios/<int:id>', methods=['GET'])
-def obter_usuario(id):
-    #Procura um usuário especifico, de acordo com o ID que estiver na URL
-    usuario = Usuario.query.get(id)
-    if usuario:
-        return jsonify(usuario.json()), 200
-    #Caso não exista, é retornado um erro tratado
-    raise NotFound("Usuário não existe, tente outro ID!")
-
 #Endpoint para UPDATE
 @user_bp.route('/usuarios/<int:id>', methods=['PUT'])
 def atualizar_usuario(id):
@@ -89,7 +90,7 @@ def atualizar_usuario(id):
     #Requisição enviada pelo cliente
     data = request.get_json()
     
-    #Acrescenta as novas informações enviadas na requisição as suas respectivas variáveis( caso não haja dados na informação, permanece o valor que já está)
+    #Acrescenta as novas informações enviadas na requisição as suas respectivas variáveis(caso não haja dados na informação, permanece o valor que já está)
     nome = data_formatada.get('Nome', usuario.nome)
     email = data_formatada.get('Email', usuario.email)
     senha = data_formatada.get('Senha', usuario.senha)
