@@ -3,6 +3,8 @@ from app.models.mensagens import Mensagem
 from app.models.usuarios import Usuario
 from app import db
 from werkzeug.exceptions import NotFound, BadRequest, Unauthorized, Forbidden
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.utils.auth_utils import perfil_required
 
 #Blueprint para as mensagens
 msg_bp = Blueprint('mensagens', __name__)
@@ -27,6 +29,8 @@ def read_one(id):
 
 #Endpoint para CREATE
 @msg_bp.route('/mensagens', methods=['POST'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
 def create_mensagem():
 
     #Requisição enviado pelo cliente
@@ -47,8 +51,12 @@ def create_mensagem():
     if not nome or not mensagem or not nome.strip() or not mensagem.strip():
         raise BadRequest('É obrigatório o preenchimento do nome e comentário.')
     
+    #Verifica quem está autenticado
+    identidade = get_jwt_identity()
+    usuario_logado = identidade['id']
+    
     #Adiciona os valores enviados na requisição ao banco de dados
-    nova_mensagem = Mensagem(nome=data_formatada['Nome'], mensagem=data_formatada['Mensagem'])
+    nova_mensagem = Mensagem(nome=data_formatada['Nome'], mensagem=data_formatada['Mensagem'], autor=usuario_logado)
     db.session.add(nova_mensagem)
     db.session.commit()
     #Retorna a mensagem que foi criada
@@ -56,6 +64,8 @@ def create_mensagem():
 
 #Endpoint para UPDATE
 @msg_bp.route('/mensagens/<int:id>', methods=['PUT'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
 def upadte_msg(id):
 
     #Procura a mensagem de acordo com ID enviado pelo cliente na URL
@@ -78,6 +88,12 @@ def upadte_msg(id):
     if 'Autor' in data_formatada:
         raise BadRequest("Não é permitido alterar o autor de uma mensagem.")
     
+    identidade = get_jwt_identity()
+    usuario_logado = identidade['id']
+
+    if identidade['perfil'] != 'ADMIN' and mensagem.autor != usuario_logado:
+        raise Forbidden('Você não tem autorização para alterar essa mensagem!')
+
     #Atualiza as informações no banco de dados(caso não haja dados na requisição, permanece os valores que já estavam)
     mensagem.nome = data_formatada.get('Nome', mensagem.nome)
     mensagem.mensagem = data_formatada.get('Mensagem', mensagem.mensagem)
@@ -87,29 +103,19 @@ def upadte_msg(id):
 
 #Endpoint para DELETE
 @msg_bp.route('/mensagens/<int:id>', methods=['DELETE'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
 def delete_msg(id):
     #Procura a mensagem de acordo com o ID enviado pelo cliente na URL
     mensagem = Mensagem.query.get(id)
     #Caso essa mensagem existe, ela é excluída do banco de dados
     if not mensagem:
         raise NotFound("Mensagem não encontrada, tente outro ID!")
-    
-    #Requisição enviada pelo cliente
-    data = request.get_json()
 
-    #Formatando as chaves para que estejam devidamente capitalizadas, evitando erros
-    data_formatada = {chave.captalize():valor for chave, valor in data.items()}
+    identidade = get_jwt_identity()
+    usuario_logado = identidade['id']
 
-    #Acrescente as informações da rquisição as suas respectivas variáveis
-    senha_autor = data_formatada.get('Senha')
-    email_autor = data_formatada.get('Email')
-
-    #Verifica se a mensagem que está tentando ser apagada é do próprio usuário.
-    usuario = Usuario.query.filter_by(email=email_autor, senha=senha_autor).first()
-    if None in usuario :
-        raise Unauthorized('Senha ou email incorretos, por favor, digite-os valores corretamente.')
-    #Se as informações enviadas não forem as mesmas do usuário que está tentando ser apagado, o DELETE não é autorizado.
-    if usuario.autor != usuario.id:
+    if identidade['perfil'] != 'ADMIN' and mensagem.autor != usuario_logado:
         raise Forbidden('Você não tem permissão para apagar essa mensagem!')
 
     db.session.delete(mensagem)

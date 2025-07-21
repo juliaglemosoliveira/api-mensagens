@@ -3,6 +3,8 @@ from app import db
 from app.models.usuarios import Usuario
 from app.utils.utils import validar_email, validar_senha
 from werkzeug.exceptions import BadRequest, Conflict, NotFound, Unauthorized, Forbidden
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.utils.auth_utils import perfil_required
 
 user_bp = Blueprint('user_bp', __name__)
 
@@ -27,6 +29,8 @@ def obter_usuario(id):
 
 #Endpoint para CREATE
 @user_bp.route('/usuarios', methods=['POST'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
 def criar_usuario():
     #Requisição enviada pelo cliente
     data = request.get_json()
@@ -68,8 +72,12 @@ def criar_usuario():
     if Usuario.query.filter_by(email=email).first():
         raise Conflict("E-mail informado já existe, por favor, tente outro!")
 
+    #Verifica quem está autenticado
+    identidade = get_jwt_identity()
+    usuario_logado = identidade['id']
+
     #Se todos os requisitos forem atendidos, é adicionado um novo usuário ao banco de dados
-    novo = Usuario(email=email, nome=nome, senha=senha)
+    novo = Usuario(email=email, nome=nome, senha=senha, usuario=usuario_logado)
     db.session.add(novo)
     db.session.commit()
 
@@ -78,6 +86,8 @@ def criar_usuario():
 
 #Endpoint para UPDATE
 @user_bp.route('/usuarios/<int:id>', methods=['PUT'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
 def atualizar_usuario(id):
     #Procura um usuário especifico, de acordo com o ID que estiver na URL
     usuario = Usuario.query.get(id)
@@ -110,6 +120,12 @@ def atualizar_usuario(id):
     if erros:
         raise BadRequest(erros)
 
+    identidade = get_jwt_identity()
+    usuario_logado = identidade['id']
+
+    if identidade['perfil'] != 'ADMIN' and usuario.id != usuario_logado:
+        raise Forbidden('Você não tem autorização para alterar informações desse usuário!')
+
     #Atualiza os campos do banco de dados com as novas informações
     usuario.nome = nome
     usuario.email = email
@@ -119,6 +135,8 @@ def atualizar_usuario(id):
 
 #Endpoint para DELETE
 @user_bp.route('/usuarios/<int:id>', methods=['DELETE'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
 def deletar_usuario(id):
     #Procura um usuário especifico, de acordo com o ID que estiver na URL
     usuario = Usuario.query.get(id)
@@ -129,19 +147,17 @@ def deletar_usuario(id):
     data = request.get_json()
 
     #Formatando as chaves para que estejam devidamente capitalizadas, evitando erros
-    data_formatada = {chave.captalize():valor for chave, valor in data.items()}
+    data_formatada = {chave.capitalize():valor for chave, valor in data.items()}
 
     #Acrescente as informações da requisição as suas respectivas variáveis
     senha_autor = data_formatada.get('Senha')
     email_autor = data_formatada.get('Email')
 
-    #Verifica se o usuário que está tentando ser apagado é o próprio usuário
-    usuario = Usuario.query.filter_by(email=email_autor, senha=senha_autor).first()
-    if None in usuario :
-        raise Unauthorized('Senha ou email incorretos, por favor, digite-os valores corretamente.')
-    #Se as informações enviadas não forem as mesmas do usuário que está tentando ser apagado, o DELETE não é autorizado.
-    if usuario.autor != usuario.id:
-        raise Forbidden('Você não tem permissão para apagar esse usuário!')     
+    identidade = get_jwt_identity()
+    usuario_logado = identidade['id']
+
+    if identidade['perfil'] != 'ADMIN' and usuario.id != usuario_logado:
+        raise Forbidden('Você não tem autorização para deletar esse usuário!')
 
     #Apaga o usuário do banco de dados
     db.session.delete(usuario)
