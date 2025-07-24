@@ -1,7 +1,7 @@
 from app import db
 from datetime import datetime
 from app.utils.utils import converter_fuso
-    
+
 class Comentario(db.Model):
     __tablename__ = 'comentarios'
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)

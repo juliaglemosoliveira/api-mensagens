@@ -8,9 +8,13 @@ class Usuario(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     senha = db.Column(db.String(30))
 
-    mensagens = db.relationship('Mensagem', backref='usuarios', lazy=True )
-    comentarios = db.relationship('Comentario', backref='usuarios', lazy=True)
+    mensagens = db.relationship('Mensagem', backref='usuarios', lazy='select' )
+    comentarios = db.relationship('Comentario', backref='usuarios', lazy='select')
 
     def json(self):
-        return {"id": self.id, "nome": self.nome, "email": self.email, "senha": self.senha}
+        return {
+            "id": self.id,
+            "nome": self.nome,
+            "email": self.email,
+            "senha": self.senha}
  
