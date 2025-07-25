@@ -29,10 +29,10 @@ def create_app():
 
     register_error_handlers_global(app)
 
-    app.register_blueprint(msg_bp)
-    app.register_blueprint(user_bp)
-    app.register_blueprint(cmt_bp)
-    app.register_blueprint(auth_bp)
+    app.register_blueprint(msg_bp, url_prefix='/mensagens')
+    app.register_blueprint(user_bp, url_prefix='/usuarios')
+    app.register_blueprint(cmt_bp, url_prefix='/comentarios')
+    app.register_blueprint(auth_bp, '/autenticar')
 
     
     

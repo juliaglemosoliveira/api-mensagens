@@ -9,7 +9,7 @@ from werkzeug.exceptions import Unauthorized, Forbidden
 auth_bp = Blueprint('auth_bp', __name__)
 
 # Login
-@auth_bp.route('/login', methods=['POST'])
+@auth_bp.route('/', methods=['POST'])
 def login():
     #Requisição enviada pelo cliente
     data = request.get_json()
@@ -31,7 +31,7 @@ def login():
     return jsonify(access_token=access_token, refresh_token=refresh_token), 200
 
 # REFRESH
-@auth_bp.route('/refresh', methods=['POST'])
+@auth_bp.route('/', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
     #Pega o token enviado decodifica

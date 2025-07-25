@@ -10,16 +10,16 @@ from app.utils.auth_utils import perfil_required
 cmt_bp = Blueprint('cmt_bp', __name__)
 
 # Endpoint para READ ALL
-@cmt_bp.route('/comentarios', methods=['GET'])
-def get_comentarios():
+@cmt_bp.route('/', methods=['GET'])
+def listar_comentarios():
     #Busca de todos comentários existentes no banco de dados
     comentarios = Comentario.query.all()
     #Retorna todos os comentários existentes no formato JSON
     return jsonify([comentario.json() for comentario in comentarios]), 200
 
 # Endpoint para READ ONE
-@cmt_bp.route('/comentarios/<int:id>', methods=['GET'])
-def get_comentario(id):
+@cmt_bp.route('/<int:id>', methods=['GET'])
+def obter_comentario(id):
     #Busca por um comentário específico, com base no ID informado na URL
     comentario = Comentario.query.get(id)
     #Caso esse comentário não exista, retorna um erro tratado
@@ -28,10 +28,10 @@ def get_comentario(id):
     return jsonify(comentario.json()), 200
 
 # Endpoint para CREATE
-@cmt_bp.route('/comentarios', methods=['POST'])
+@cmt_bp.route('/', methods=['POST'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
-def create_comentario():
+def criar_comentario():
     #Requisição enviada pelo cliente
     data = request.get_json()
 
@@ -63,10 +63,10 @@ def create_comentario():
 
 
 # Endpoint para UPDATE
-@cmt_bp.route('/comentarios/<int:id>', methods=['PUT'])
+@cmt_bp.route('/<int:id>', methods=['PUT'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
-def update_comentario(id):
+def atualizar_comentario(id):
     #Busca por um comentário específico, com base no ID informado na URL
     comentario = Comentario.query.get(id)
     if not comentario:
@@ -98,10 +98,10 @@ def update_comentario(id):
     return jsonify(comentario.json()), 200
 
 # Endpoint para DELETE
-@cmt_bp.route('/comentarios/<int:id>', methods=['DELETE'])
+@cmt_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
-def delete_comentario(id):
+def deletar_comentario(id):
     #Busca por um comentário específico, com base no ID informado na URL
     comentario = Comentario.query.get(id)
     if not comentario:
@@ -119,8 +119,8 @@ def delete_comentario(id):
     return jsonify({'Mensagem': 'Comentário deletado com sucesso!'}), 200
 
 #Endpoint para Comentario por Mensagem
-@cmt_bp.route('/mensagens/<int:mensagem_id>/comentarios', methods=['GET'])
-def comentarios_mensagem(mensagem_id):
+@cmt_bp.route('/<int:mensagem_id>/comentarios', methods=['GET'])
+def comentarios_por_mensagem(mensagem_id):
     #Busca por um comentário específico, com base no ID da mensagem informado na URL
     comentarios = Comentario.query.filter_by(mensagem_id=mensagem_id).all()
     if not comentarios:

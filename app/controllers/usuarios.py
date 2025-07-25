@@ -9,7 +9,7 @@ from app.utils.auth_utils import perfil_required
 user_bp = Blueprint('user_bp', __name__)
 
 #Endpoint para READ-ALL
-@user_bp.route('/usuarios', methods=['GET'])
+@user_bp.route('/', methods=['GET'])
 def listar_usuarios():
     #Procura todos os usuarios existentes no banco de dados
     usuarios = Usuario.query.all()
@@ -18,7 +18,7 @@ def listar_usuarios():
 
 
 # Endpoint para READ-ONE
-@user_bp.route('/usuarios/<int:id>', methods=['GET'])
+@user_bp.route('/<int:id>', methods=['GET'])
 def obter_usuario(id):
     #Procura um usuário especifico, de acordo com o ID que estiver na URL
     usuario = Usuario.query.get(id)
@@ -28,7 +28,7 @@ def obter_usuario(id):
     raise NotFound("Usuário não existe, tente outro ID!")
 
 #Endpoint para CREATE
-@user_bp.route('/usuarios', methods=['POST'])
+@user_bp.route('/', methods=['POST'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
 def criar_usuario():
@@ -85,7 +85,7 @@ def criar_usuario():
     return jsonify(novo.json()), 201
 
 #Endpoint para UPDATE
-@user_bp.route('/usuarios/<int:id>', methods=['PUT'])
+@user_bp.route('/<int:id>', methods=['PUT'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
 def atualizar_usuario(id):
@@ -134,7 +134,7 @@ def atualizar_usuario(id):
     return jsonify({"Mensagem":"Usuário atualizado com sucesso!"}), 200
 
 #Endpoint para DELETE
-@user_bp.route('/usuarios/<int:id>', methods=['DELETE'])
+@user_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
 def deletar_usuario(id):

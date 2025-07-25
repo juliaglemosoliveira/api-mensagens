@@ -10,16 +10,16 @@ from app.utils.auth_utils import perfil_required
 msg_bp = Blueprint('mensagens', __name__)
 
 #Endpoint para READ - ALL
-@msg_bp.route('/mensagens', methods=['GET'])
-def read_all():
+@msg_bp.route('/', methods=['GET'])
+def listar_mensagens():
     #Busca por todas as mensagens no banco de dados
     mensagens = Mensagem.query.all()
     #Retorna um JSON com todas as mensagens
     return jsonify([mensagem.json() for mensagem in mensagens]), 200
 
 #Endpoint para READ ONE
-@msg_bp.route('/mensagens/<int:id>', methods=['GET'])
-def read_one(id):
+@msg_bp.route('/<int:id>', methods=['GET'])
+def obter_mensagem(id):
     #Procura a mensagem no base no ID que está na URL
     mensagem = Mensagem.query.get(id)
     if mensagem:
@@ -28,10 +28,10 @@ def read_one(id):
     raise NotFound("Mensagem não encontrada, tente outro ID!")
 
 #Endpoint para CREATE
-@msg_bp.route('/mensagens', methods=['POST'])
+@msg_bp.route('/', methods=['POST'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
-def create_mensagem():
+def criar_mensagem():
 
     #Requisição enviado pelo cliente
     data = request.get_json()
@@ -63,10 +63,10 @@ def create_mensagem():
     return jsonify(nova_mensagem.json()), 201
 
 #Endpoint para UPDATE
-@msg_bp.route('/mensagens/<int:id>', methods=['PUT'])
+@msg_bp.route('/<int:id>', methods=['PUT'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
-def upadte_msg(id):
+def atualizar_mensagem(id):
 
     #Procura a mensagem de acordo com ID enviado pelo cliente na URL
     mensagem = Mensagem.query.get(id)
@@ -102,10 +102,10 @@ def upadte_msg(id):
     return jsonify(mensagem.json()), 200
 
 #Endpoint para DELETE
-@msg_bp.route('/mensagens/<int:id>', methods=['DELETE'])
+@msg_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
-def delete_msg(id):
+def deletar_mensagem(id):
     #Procura a mensagem de acordo com o ID enviado pelo cliente na URL
     mensagem = Mensagem.query.get(id)
     #Caso essa mensagem existe, ela é excluída do banco de dados

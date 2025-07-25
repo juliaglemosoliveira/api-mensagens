@@ -1,5 +1,4 @@
 from app import db
-import re
 
 class Usuario(db.Model):
     __tablename__ = 'usuarios'
