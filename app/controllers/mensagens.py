@@ -53,10 +53,9 @@ def criar_mensagem():
     
     #Verifica quem está autenticado
     identidade = get_jwt_identity()
-    usuario_logado = identidade['id']
     
     #Adiciona os valores enviados na requisição ao banco de dados
-    nova_mensagem = Mensagem(nome=data_formatada['Nome'], mensagem=data_formatada['Mensagem'], autor=usuario_logado)
+    nova_mensagem = Mensagem(nome=data_formatada['Nome'], mensagem=data_formatada['Mensagem'], autor=identidade)
     db.session.add(nova_mensagem)
     db.session.commit()
     #Retorna a mensagem que foi criada

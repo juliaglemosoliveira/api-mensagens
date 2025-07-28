@@ -29,8 +29,6 @@ def obter_usuario(id):
 
 #Endpoint para CREATE
 @user_bp.route('/', methods=['POST'])
-@jwt_required()
-@perfil_required(['ADMIN', 'USER'])
 def criar_usuario():
     #Requisição enviada pelo cliente
     data = request.get_json()
@@ -72,12 +70,8 @@ def criar_usuario():
     if Usuario.query.filter_by(email=email).first():
         raise Conflict("E-mail informado já existe, por favor, tente outro!")
 
-    #Verifica quem está autenticado
-    identidade = get_jwt_identity()
-    usuario_logado = identidade['id']
-
     #Se todos os requisitos forem atendidos, é adicionado um novo usuário ao banco de dados
-    novo = Usuario(email=email, nome=nome, senha=senha, usuario=usuario_logado)
+    novo = Usuario(email=email, nome=nome, senha=senha)
     db.session.add(novo)
     db.session.commit()
 

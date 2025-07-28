@@ -9,7 +9,7 @@ from werkzeug.exceptions import Unauthorized, Forbidden
 auth_bp = Blueprint('auth_bp', __name__)
 
 # Login
-@auth_bp.route('/', methods=['POST'])
+@auth_bp.route('/login', methods=['POST'])
 def login():
     #Requisição enviada pelo cliente
     data = request.get_json()
@@ -21,17 +21,19 @@ def login():
     if not usuario:
         raise Unauthorized('Credenciais inválidas.')
     #Cria um Token de acesso e de atualização para o usuário logado
-    access_token = create_access_token(identity={'id': usuario.id, 'perfil': usuario.perfil})
-    refresh_token = create_refresh_token(identity={'id': usuario.id, 'perfil': usuario.perfil})
+    access_token = create_access_token(identity=str(usuario.id), additional_claims={'perfil': usuario.perfil})
+    refresh_token = create_refresh_token(identity=str(usuario.id), additional_claims={'perfil': usuario.perfil})
+    #Pega o JTI do Token
+    jti = get_jti(refresh_token)
     #Adiciona o Token Refresh ao banco de dados, para ser possível a rotação
-    add_token = Token(token=refresh_token, usuario_id=usuario.id)
+    add_token = Token(jti=jti, usuario_id=usuario.id)
     db.session.add(add_token)
     db.session.commit()
 
     return jsonify(access_token=access_token, refresh_token=refresh_token), 200
 
 # REFRESH
-@auth_bp.route('/', methods=['POST'])
+@auth_bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
     #Pega o token enviado decodifica
@@ -57,7 +59,7 @@ def refresh():
     new_refresh_token = create_refresh_token(identity=identidade)
     
     new_jti = get_jti(new_refresh_token)
-    add_token = Token(token=new_jti, usuario_id=usuario_id)
+    add_token = Token(jti=new_jti, usuario_id=usuario_id)
     db.session.add(add_token)
     db.session.commit()
 

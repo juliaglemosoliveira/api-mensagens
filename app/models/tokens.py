@@ -15,6 +15,6 @@ class Token(db.Model):
     def json(self, tz_cliente='America/Sao_Paulo'):
         return{
             'id':self.id,
-            'token':self.token,
+            'jti':self.jti,
             'usuario_id':self.usuario_id,
             'data_hora':converter_fuso(self.data_hora, tz_cliente)}

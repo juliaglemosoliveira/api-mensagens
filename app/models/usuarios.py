@@ -6,6 +6,7 @@ class Usuario(db.Model):
     nome = db.Column(db.String(30), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     senha = db.Column(db.String(30))
+    perfil = db.Column(db.String(30), default='USER')
 
     mensagens = db.relationship('Mensagem', backref='usuarios', lazy='select' )
     comentarios = db.relationship('Comentario', backref='usuarios', lazy='select')
@@ -15,5 +16,6 @@ class Usuario(db.Model):
             "id": self.id,
             "nome": self.nome,
             "email": self.email,
-            "senha": self.senha}
+            "senha": self.senha,
+            "perfil":self.perfil}
  
