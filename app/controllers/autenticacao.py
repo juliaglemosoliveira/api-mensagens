@@ -42,15 +42,13 @@ def refresh():
     jti = token['jti']
     #Pega os dados de identidade que foram definidios no token
     identidade = get_jwt_identity()
-    #Pega, especificamente, o ID
-    usuario_id = identidade['id']
 
     #Verifica o ID do token que está no banco de dados
     token_db = Token.query.filter_by(jti=jti).first()
 
     # Se o ID que estiver no DB não for o mesmo do token enviado na requisição, ou o token enviado estiver inválido, é retornado um erro tratado.
     if not token_db or not token_db.valido:
-        raise Forbidden('Token enviado não é valido.')
+        raise Forbidden('Token enviado não é válido.')
     
     #Caso o Token seja valido e coincida com o ID que está no DB, então invalida o token antigo
     token_db.valido = False
@@ -59,7 +57,7 @@ def refresh():
     new_refresh_token = create_refresh_token(identity=identidade)
     
     new_jti = get_jti(new_refresh_token)
-    add_token = Token(jti=new_jti, usuario_id=usuario_id)
+    add_token = Token(jti=new_jti, usuario_id=identidade)
     db.session.add(add_token)
     db.session.commit()
 

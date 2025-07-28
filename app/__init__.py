@@ -15,7 +15,8 @@ def create_app():
     app.config['JWT_SECRET_KEY'] = 'sua_chave_secreta'
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 3600  # 1 hora
     app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 604800  # 7 dias
-
+    app.config['DEBUG'] = False
+    app.config['PROPAGATE_EXCEPTIONS'] = True
     
     db.init_app(app)
     migrate.init_app(app, db)

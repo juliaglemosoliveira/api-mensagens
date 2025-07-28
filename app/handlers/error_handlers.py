@@ -1,12 +1,11 @@
 from flask import jsonify
-from werkzeug.exceptions import NotFound, BadRequest, Conflict, Unauthorized, Forbidden
+from werkzeug.exceptions import NotFound, BadRequest, Conflict, Unauthorized, Forbidden, InternalServerError
 
 def register_error_handlers_global(app):
 
     @app.errorhandler(BadRequest)
     def error_bad_request(e):
         descricao = getattr(e, 'description', None)
-
         if isinstance(descricao, str) and 'Failed to decode JSON object' in descricao:
             return jsonify({'Mensagem': 'Requisição mal formada, por favor, envie em um formato JSON adequado.'}), 400
 
@@ -23,7 +22,7 @@ def register_error_handlers_global(app):
         return jsonify({'Mensagem': 'Você não tem autorização para acessar esse recurso.'}), 401
     
     @app.errorhandler(Forbidden)
-    def error_handler_unauthorized(e):
+    def error_handler_forbidden(e):
         descricao = getattr(e, 'description', None)
         if descricao and descricao != Forbidden.description:
             return jsonify({'Mensagem': descricao}), 403
@@ -31,7 +30,10 @@ def register_error_handlers_global(app):
 
     @app.errorhandler(NotFound)
     def error_not_found(e):
-        return jsonify({'Mensagem': 'Recurso nao encontrado'}), 404
+        descricao = getattr(e, 'description', None)
+        if descricao and descricao != NotFound.description:
+            return jsonify({'Mensagem': descricao}), 404
+        return jsonify({'Mensagem': 'Recurso não encontrado.'}), 404
 
     @app.errorhandler(Conflict)
     def error_handler_conflict(e):
@@ -40,4 +42,10 @@ def register_error_handlers_global(app):
             return jsonify({'Mensagem': descricao}), 409
         return jsonify({'Mensagem': 'Conflito de dados.'}), 409
     
+    @app.errorhandler(InternalServerError)
+    def handle_internal_error(e):
+        return jsonify({'Mensagem': 'Erro interno do servidor!'}), 500
     
+    @app.errorhandler(Exception)
+    def error_handler_exceptions(e):
+            return jsonify({'Mensagem': 'Erro inesperado!'}), 500  
