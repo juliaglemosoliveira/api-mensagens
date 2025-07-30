@@ -4,13 +4,15 @@ from app.models.comentarios import Comentario
 from app.models.mensagens import Mensagem
 from app.models.usuarios import Usuario
 from werkzeug.exceptions import BadRequest, NotFound, Unauthorized, Forbidden
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.utils.auth_utils import perfil_required 
 
 cmt_bp = Blueprint('cmt_bp', __name__)
 
 # Endpoint para READ ALL
 @cmt_bp.route('/', methods=['GET'])
+@jwt_required()
+@perfil_required(['ADMIN'])
 def listar_comentarios():
     #Busca de todos comentários existentes no banco de dados
     comentarios = Comentario.query.all()
@@ -19,12 +21,24 @@ def listar_comentarios():
 
 # Endpoint para READ ONE
 @cmt_bp.route('/<int:id>', methods=['GET'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
 def obter_comentario(id):
     #Busca por um comentário específico, com base no ID informado na URL
     comentario = Comentario.query.get(id)
     #Caso esse comentário não exista, retorna um erro tratado
     if not comentario:
         raise NotFound('Nenhum comentário com esse ID, tente outro!')
+
+    # ID do usuário autenticado
+    identidade = get_jwt_identity()  
+    claims = get_jwt()
+    perfil = claims.get('perfil')
+
+    # Se não for ADMIN e tentar acessar outro usuário
+    if perfil != 'ADMIN' and comentario.autor != int(identidade):
+        raise Forbidden("Você não tem permissão para acessar este comentario.")
+
     return jsonify(comentario.json()), 200
 
 # Endpoint para CREATE
@@ -52,10 +66,9 @@ def criar_comentario():
         raise NotFound('Nenhuma mensagem com esse ID, tente outro!')
 
     identidade = get_jwt_identity()
-    usuario_logado = identidade['id']
     
     #Adição do novo comentário ao banco de dados
-    novo_comentario = Comentario(comentario=comentario,mensagem_id=mensagem_id, autor=usuario_logado)
+    novo_comentario = Comentario(comentario=comentario,mensagem_id=mensagem_id, autor=identidade)
     db.session.add(novo_comentario)
     db.session.commit()
     #Retorna o comentário criado para o cliente
@@ -87,13 +100,14 @@ def atualizar_comentario(id):
         raise BadRequest('Não é permitido alterar o autor ou mensagem_id de um comentário.')
     
     identidade = get_jwt_identity()
-    usuario_logado = identidade['id']
+    claims = get_jwt()
+    perfil = claims.get('perfil')
 
-    if identidade['perfil'] != 'ADMIN' and comentario.autor != usuario_logado:
+    if perfil != 'ADMIN' and comentario.autor != int(identidade):
         raise Forbidden('Você não tem autorização para alterar esse comentário!')
     
      #Atualiza as informações no banco de dados(caso não haja dados na requisição, permanece os valores que já estavam)
-    comentario.comentario = data.get('Comentario', comentario.comentario)
+    comentario.comentario = data_formatada.get('Comentario', comentario.comentario)
     db.session.commit()
     return jsonify(comentario.json()), 200
 
@@ -108,9 +122,10 @@ def deletar_comentario(id):
         raise NotFound('Nenhum comentário com esse ID, tente outro!')
     
     identidade = get_jwt_identity()
-    usuario_logado = identidade['id']
+    claims = get_jwt()
+    perfil = claims.get('perfil')
 
-    if identidade['perfil'] != 'ADMIN' and comentario.autor != usuario_logado:
+    if perfil != 'ADMIN' and comentario.autor != int(identidade):
         raise Forbidden('Você não tem autorização para deletar esse comentário!')
    
     #Delete o comentário do banco de dados, caso todos os requisitos sejam atendidos

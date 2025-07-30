@@ -10,7 +10,7 @@ class Token(db.Model):
     data_hora = db.Column(db.DateTime, default=datetime.utcnow)
     valido = db.Column(db.Boolean, default=True)
 
-    autor = db.relationship('Usuario', backref='tokens', lazy='select', cascade='all, delete-orphan')
+    autor = db.relationship('Usuario', backref='tokens', lazy='select')
 
     def json(self, tz_cliente='America/Sao_Paulo'):
         return{
