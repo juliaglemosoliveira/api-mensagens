@@ -3,7 +3,7 @@ from app import db
 from app.models.usuarios import Usuario
 from app.utils.utils import validar_email, validar_senha
 from werkzeug.exceptions import BadRequest, Conflict, NotFound, Unauthorized, Forbidden
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.utils.auth_utils import perfil_required
 
 user_bp = Blueprint('user_bp', __name__)
