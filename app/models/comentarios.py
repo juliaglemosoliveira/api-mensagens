@@ -5,9 +5,9 @@ from app.utils.utils import converter_fuso
 class Comentario(db.Model):
     __tablename__ = 'comentarios'
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    comentario = db.Column(db.String(200), nullable=True)
+    comentario = db.Column(db.String(200), nullable=False)
     data_hora = db.Column(db.DateTime, default=datetime.utcnow)
-    autor = db.Column(db.Integer, db.ForeignKey('usuarios.id'), default=1)
+    autor = db.Column(db.Integer, db.ForeignKey('usuarios.id'), default=1, nullable=False)
     mensagem_id = db.Column(db.Integer, db.ForeignKey('mensagens.id'))
 
     def json(self, tz_cliente='America/Sao_Paulo'):

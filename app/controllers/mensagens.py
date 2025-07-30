@@ -3,7 +3,7 @@ from app.models.mensagens import Mensagem
 from app.models.usuarios import Usuario
 from app import db
 from werkzeug.exceptions import NotFound, BadRequest, Unauthorized, Forbidden
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.utils.auth_utils import perfil_required
 
 #Blueprint para as mensagens
@@ -88,9 +88,10 @@ def atualizar_mensagem(id):
         raise BadRequest("Não é permitido alterar o autor de uma mensagem.")
     
     identidade = get_jwt_identity()
-    usuario_logado = identidade['id']
+    claims = get_jwt()
+    perfil = claims.get('perfil')
 
-    if identidade['perfil'] != 'ADMIN' and mensagem.autor != usuario_logado:
+    if perfil != 'ADMIN' and mensagem.autor != int(identidade):
         raise Forbidden('Você não tem autorização para alterar essa mensagem!')
 
     #Atualiza as informações no banco de dados(caso não haja dados na requisição, permanece os valores que já estavam)
@@ -112,9 +113,10 @@ def deletar_mensagem(id):
         raise NotFound("Mensagem não encontrada, tente outro ID!")
 
     identidade = get_jwt_identity()
-    usuario_logado = identidade['id']
+    claims = get_jwt()
+    perfil = claims.get('perfil')
 
-    if identidade['perfil'] != 'ADMIN' and mensagem.autor != usuario_logado:
+    if perfil != 'ADMIN' and mensagem.autor != int(identidade):
         raise Forbidden('Você não tem permissão para apagar essa mensagem!')
 
     db.session.delete(mensagem)

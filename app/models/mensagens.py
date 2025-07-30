@@ -10,7 +10,7 @@ class Mensagem(db.Model):
     data_hora = db.Column(db.DateTime, default=datetime.utcnow)
     autor = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, default=1)
 
-    comentarios = db.relationship('Comentario', backref='mensagens', lazy='select')
+    comentarios = db.relationship('Comentario', backref='mensagens', lazy='select', cascade='all, delete-orphan')
 
     def json(self, tz_cliente='America/Sao_Paulo'):
         return {
