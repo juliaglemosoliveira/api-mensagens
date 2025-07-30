@@ -1,4 +1,4 @@
-#!/workspaces/api-mensagens/api-mensagens/venv/bin/python
+#!/workspaces/api-mensagens/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
