@@ -19,21 +19,21 @@ def register_error_handlers_global(app):
         descricao = getattr(e, 'description', None)
         if descricao and descricao != Unauthorized.description:
             return jsonify({'Mensagem': descricao}), 401
-        return jsonify({'Mensagem': 'Você não tem autorização para acessar esse recurso.'}), 401
+        return jsonify({'Mensagem': 'Você não tem autorizacao para acessar esse recurso.'}), 401
     
     @app.errorhandler(Forbidden)
     def error_handler_forbidden(e):
         descricao = getattr(e, 'description', None)
         if descricao and descricao != Forbidden.description:
             return jsonify({'Mensagem': descricao}), 403
-        return jsonify({'Mensagem': 'Você não tem autorização para executar essa ação.'}), 403
+        return jsonify({'Mensagem': 'Você não tem autorizacao para executar essa ação.'}), 403
 
     @app.errorhandler(NotFound)
     def error_not_found(e):
         descricao = getattr(e, 'description', None)
         if descricao and descricao != NotFound.description:
             return jsonify({'Mensagem': descricao}), 404
-        return jsonify({'Mensagem': 'Recurso não encontrado.'}), 404
+        return jsonify({'Mensagem': 'Recurso nao encontrado.'}), 404
 
     @app.errorhandler(Conflict)
     def error_handler_conflict(e):

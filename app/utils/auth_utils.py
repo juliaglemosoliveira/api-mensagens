@@ -16,7 +16,6 @@ def perfil_required(perfis):
             verify_jwt_in_request()
             #Decodifica o token e pega os dados de identidade contidos nele
             identidade = get_jwt()
-            print("Claims no token:", identidade)  # DEBUG
             #Se o perfil do token for inadequado para função X, então é retornado um erro tratado
             if identidade['perfil'] not in perfis:
                 raise Forbidden('Acesso negado para seu perfil.')

@@ -11,13 +11,9 @@ user_bp = Blueprint('user_bp', __name__)
 #Endpoint para READ-ALL
 @user_bp.route('/', methods=['GET'])
 @jwt_required()
-@perfil_required(['ADMIN', 'USER'])
+@perfil_required(['ADMIN'])
 def listar_usuarios():
 
-    identidade = get_jwt()
-    if 'ADMIN' not in additional_claims:
-        raise Forbidden('Você não tem autorização para acessar esse recurso!')
-    
     #Procura todos os usuarios existentes no banco de dados
     usuarios = Usuario.query.all()
 
@@ -27,13 +23,23 @@ def listar_usuarios():
 
 # Endpoint para READ-ONE
 @user_bp.route('/<int:id>', methods=['GET'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
 def obter_usuario(id):
-    #Procura um usuário especifico, de acordo com o ID que estiver na URL
     usuario = Usuario.query.get(id)
-    if usuario:
-        return jsonify(usuario.json()), 200
-    #Caso não exista, é retornado um erro tratado
-    raise NotFound("Usuário não existe, tente outro ID!")
+    if not usuario:
+        raise NotFound("Usuário não existe, tente outro ID!")
+
+    # ID do usuário autenticado
+    identidade = get_jwt_identity()  
+    claims = get_jwt()
+    perfil = claims.get('perfil')
+
+    # Se não for ADMIN e tentar acessar outro usuário
+    if perfil != 'ADMIN' and usuario.id != int(identidade):
+        raise Forbidden("Você não tem permissão para acessar este usuário.")
+
+    return jsonify(usuario.json()), 200
 
 #Endpoint para CREATE
 @user_bp.route('/', methods=['POST'])
@@ -94,14 +100,14 @@ def atualizar_usuario(id):
     #Procura um usuário especifico, de acordo com o ID que estiver na URL
     usuario = Usuario.query.get(id)
     if not usuario:
-        raise BadRequest("Usuário não existe, tente outro ID!")
+        raise NotFound("Usuário não existe, tente outro ID!")
+    
+    #Requisição enviada pelo cliente
+    data = request.get_json()
     
     #Capitaliza as chaves enviadas na requisição pelo cliente, evitando erros
     data_formatada = {chave.capitalize(): valor for chave, valor in data.items()}
 
-    #Requisição enviada pelo cliente
-    data = request.get_json()
-    
     #Acrescenta as novas informações enviadas na requisição as suas respectivas variáveis(caso não haja dados na informação, permanece o valor que já está)
     nome = data_formatada.get('Nome', usuario.nome)
     email = data_formatada.get('Email', usuario.email)
@@ -122,10 +128,12 @@ def atualizar_usuario(id):
     if erros:
         raise BadRequest(erros)
 
-    identidade = get_jwt_identity()
-    usuario_logado = identidade['id']
+    # ID do usuário autenticado
+    identidade = get_jwt_identity()  
+    claims = get_jwt()
+    perfil = claims.get('perfil')
 
-    if identidade['perfil'] != 'ADMIN' and usuario.id != usuario_logado:
+    if perfil != 'ADMIN' and usuario.id != int(identidade):
         raise Forbidden('Você não tem autorização para alterar informações desse usuário!')
 
     #Atualiza os campos do banco de dados com as novas informações
@@ -133,6 +141,7 @@ def atualizar_usuario(id):
     usuario.email = email
     usuario.senha = senha
     db.session.commit()
+    
     return jsonify({"Mensagem":"Usuário atualizado com sucesso!"}), 200
 
 #Endpoint para DELETE
@@ -143,22 +152,13 @@ def deletar_usuario(id):
     #Procura um usuário especifico, de acordo com o ID que estiver na URL
     usuario = Usuario.query.get(id)
     if not usuario:
-        raise BadRequest("Usuário não existe, tente outro ID!")
-
-    #Requisição enviada pelo cliente
-    data = request.get_json()
-
-    #Formatando as chaves para que estejam devidamente capitalizadas, evitando erros
-    data_formatada = {chave.capitalize():valor for chave, valor in data.items()}
-
-    #Acrescente as informações da requisição as suas respectivas variáveis
-    senha_autor = data_formatada.get('Senha')
-    email_autor = data_formatada.get('Email')
+        raise NotFound("Usuário não existe, tente outro ID!")
 
     identidade = get_jwt_identity()
-    usuario_logado = identidade['id']
+    claims = get_jwt()
+    perfil = claims.get('perfil')
 
-    if identidade['perfil'] != 'ADMIN' and usuario.id != usuario_logado:
+    if perfil != 'ADMIN' and usuario.id != int(identidade):
         raise Forbidden('Você não tem autorização para deletar esse usuário!')
 
     #Apaga o usuário do banco de dados
