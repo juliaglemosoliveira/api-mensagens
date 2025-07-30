@@ -11,9 +11,13 @@ msg_bp = Blueprint('mensagens', __name__)
 
 #Endpoint para READ - ALL
 @msg_bp.route('/', methods=['GET'])
-def listar_mensagens():
+def listar_mensagens(): 
     #Busca por todas as mensagens no banco de dados
     mensagens = Mensagem.query.all()
+    #Verifica se o Perfil é USER ou ADMINN 
+    if additional_claims != 'ADMIN':
+        raise Forbidden('Você não tem permissão para acessar esse recurso')
+
     #Retorna um JSON com todas as mensagens
     return jsonify([mensagem.json() for mensagem in mensagens]), 200
 

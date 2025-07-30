@@ -10,9 +10,17 @@ user_bp = Blueprint('user_bp', __name__)
 
 #Endpoint para READ-ALL
 @user_bp.route('/', methods=['GET'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
 def listar_usuarios():
+
+    identidade = get_jwt()
+    if 'ADMIN' not in additional_claims:
+        raise Forbidden('Você não tem autorização para acessar esse recurso!')
+    
     #Procura todos os usuarios existentes no banco de dados
     usuarios = Usuario.query.all()
+
     #Retorna todos os usuários que estão no banco de dados no formato JSON
     return jsonify([user.json() for user in usuarios]), 200
 

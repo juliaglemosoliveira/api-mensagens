@@ -21,8 +21,8 @@ def login():
     if not usuario:
         raise Unauthorized('Credenciais inválidas.')
     #Cria um Token de acesso e de atualização para o usuário logado
-    access_token = create_access_token(identity=str(usuario.id), additional_claims={'perfil': usuario.perfil})
-    refresh_token = create_refresh_token(identity=str(usuario.id), additional_claims={'perfil': usuario.perfil})
+    access_token = create_access_token(identity=usuario.id, additional_claims={'perfil': usuario.perfil})
+    refresh_token = create_refresh_token(identity=usuario.id, additional_claims={'perfil': usuario.perfil})
     #Pega o JTI do Token
     jti = get_jti(refresh_token)
     #Adiciona o Token Refresh ao banco de dados, para ser possível a rotação
