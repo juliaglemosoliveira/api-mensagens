@@ -158,6 +158,8 @@ def deletar_usuario(id):
     claims = get_jwt()
     perfil = claims.get('perfil')
 
+    print(f"[DEBUG] perfil={perfil}, usuario.id={usuario.id}, identidade={identidade}")
+    
     if perfil != 'ADMIN' and usuario.id != int(identidade):
         raise Forbidden('Você não tem autorização para deletar esse usuário!')
 
