@@ -28,7 +28,7 @@ def login():
     add_token = Token(jti=jti, usuario_id=usuario.id)
     db.session.add(add_token)
     db.session.commit()
-
+    #Retorna um Access e Refresh Token
     return jsonify(access_token=access_token, refresh_token=refresh_token), 200
 
 # REFRESH
@@ -52,13 +52,15 @@ def refresh():
     #Caso o Token seja valido e coincida com o ID que está no DB, então invalida o token antigo
     token_db.valido = False
 
-    #Cria uma novo Refresh Token
+    #Cria uma novo Refresh Token e Access Token
     new_refresh_token = create_refresh_token(identity=identidade)
+    new_access_token = create_access_token(identity=identidade)
     
+    #Adiciona o refresh token ao Banco de Dados
     new_jti = get_jti(new_refresh_token)
     add_token = Token(jti=new_jti, usuario_id=identidade)
     db.session.add(add_token)
     db.session.commit()
-
-    new_access_token = create_access_token(identity=identidade)
+    
+    #Retorna os novos Access e Refresh Token
     return jsonify(access_token=new_access_token, refresh_token=new_refresh_token ), 200

@@ -12,9 +12,6 @@ def create_app():
 
     app = Flask(__name__)
     app.config.from_object('config.config')
-    app.config['JWT_SECRET_KEY'] = 'sua_chave_secreta'
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 3600  # 1 hora
-    app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 604800  # 7 dias
     
     db.init_app(app)
     migrate.init_app(app, db)
