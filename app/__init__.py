@@ -25,12 +25,12 @@ def create_app():
     from app.controllers.mensagens import msg_bp
     from app.controllers.usuarios import user_bp
     from app.controllers.comentarios import cmt_bp
-    from app.controllers.autenticacao import auth_bp
+    from app.controllers.auth import auth_bp
 
     app.register_blueprint(msg_bp, url_prefix='/mensagens')
     app.register_blueprint(user_bp, url_prefix='/usuarios')
-    app.register_blueprint(cmt_bp, url_prefix='/comentarios')
-    app.register_blueprint(auth_bp, url_prefix='/autenticacoes')
+    app.register_blueprint(cmt_bp, url_prefix='/mensagens')
+    app.register_blueprint(auth_bp, url_prefix='/auth')
 
     #with app.app_context():
     #    db.create_all()

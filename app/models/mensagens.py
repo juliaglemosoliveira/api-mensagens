@@ -5,8 +5,8 @@ from app.utils.utils import converter_fuso
 class Mensagem(db.Model):
     __tablename__ = 'mensagens'
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    nome = db.Column(db.String(30), nullable=False)
-    mensagem = db.Column(db.String(200))
+    titulo = db.Column(db.String(50), nullable=False)
+    conteudo = db.Column(db.String(200), nullable=False)
     data_hora = db.Column(db.DateTime, default=datetime.utcnow)
     autor = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, default=1)
 
@@ -15,7 +15,8 @@ class Mensagem(db.Model):
     def json(self, tz_cliente='America/Sao_Paulo'):
         return {
             "id": self.id,
-            "nome": self.nome,
-            "mensagem": self.mensagem,
+            "titulo":self.titulo,
+            "conteudo": self.conteudo,
             "data_hora":converter_fuso(self.data_hora, tz_cliente),
-            "autor": self.autor}
+            "autor": self.autor,
+            "comentario": [comentario.json() for comentario in self.comentarios]}

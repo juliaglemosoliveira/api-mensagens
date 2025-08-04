@@ -40,22 +40,22 @@ def criar_mensagem():
     data_formatada = {chave.capitalize(): valor for chave, valor in data.items()}
 
     #Verifica se realmente as chaves estão realmente presentes na requisição, se não estiver, retorna um erro tratado    
-    if 'Nome' not in data_formatada or "Mensagem" not in data_formatada:
-        raise BadRequest("Os campos'Nome' e 'Mensagem' devem ser preenchidos adequadamente!")
+    if 'Titulo' not in data_formatada or "Conteudo" not in data_formatada:
+        raise BadRequest("Os campos'Titulo' e 'Conteudo' devem ser preenchidos adequadamente!")
     
     #Acrescente as informações da rquisição as suas respectivas variáveis
-    nome = data_formatada.get('Nome')
-    mensagem = data_formatada.get('Mensagem')
+    titulo = data_formatada.get('Titulo')
+    conteudo = data_formatada.get('Conteudo')
 
     #Vericia se os campos Nome e Mensagem estão preenchidos adequadamente
-    if not nome or not mensagem or not nome.strip() or not mensagem.strip():
+    if not titulo or not conteudo or not titulo.strip() or not conteudo.strip():
         raise BadRequest('É obrigatório o preenchimento do nome e comentário.')
     
     #Verifica quem está autenticado
     identidade = get_jwt_identity()
     
     #Adiciona os valores enviados na requisição ao banco de dados
-    nova_mensagem = Mensagem(nome=data_formatada['Nome'], mensagem=data_formatada['Mensagem'], autor=identidade)
+    nova_mensagem = Mensagem(titulo=data_formatada['Titulo'], conteudo=data_formatada['Conteudo'], autor=identidade)
     db.session.add(nova_mensagem)
     db.session.commit()
     #Retorna a mensagem que foi criada
@@ -79,10 +79,6 @@ def atualizar_mensagem(id):
     #Capitaliza as chaves enviadas na requisição, pelo cliente, evitando conflitos
     data_formatada = {chave.capitalize(): valor for chave, valor in data.items()}
 
-    #Verifica se realmente as chaves estão presentes na requisição   
-    if 'Mensagem' not in data_formatada or 'Nome' not in data_formatada:
-        raise BadRequest("O campo deve ter obrigatoriamente os campos de 'Nome' e 'Mensagem' preenchidos adequadamente!")
-    
     # Bloqueia alteração do usuário/autor, caso o cliente tente enviar a troca pela requisição
     if 'Autor' in data_formatada:
         raise BadRequest("Não é permitido alterar o autor de uma mensagem.")
@@ -95,8 +91,44 @@ def atualizar_mensagem(id):
         raise Forbidden('Você não tem autorização para alterar essa mensagem!')
 
     #Atualiza as informações no banco de dados(caso não haja dados na requisição, permanece os valores que já estavam)
-    mensagem.nome = data_formatada.get('Nome', mensagem.nome)
-    mensagem.mensagem = data_formatada.get('Mensagem', mensagem.mensagem)
+    mensagem.titulo = data_formatada.get('Titulo', mensagem.titulo)
+    mensagem.conteudo = data_formatada.get('Conteudo', mensagem.conteudo)
+    db.session.commit()
+    #retorna a mensagem atualizada
+    return jsonify(mensagem.json()), 200
+
+#Endpoint para UPDATE PARCIAL
+@msg_bp.route('/<int:id>', methods=['PATCH'])
+@jwt_required()
+@perfil_required(['ADMIN', 'USER'])
+def modificar_mensagem(id):
+
+    #Procura a mensagem de acordo com ID enviado pelo cliente na URL
+    mensagem = Mensagem.query.get(id)
+    #Caso não seja encontrado a mensagem, retorna um erro tratado
+    if not mensagem:
+        raise NotFound("Mensagem não encontrada, tente outro ID!")
+
+    #Requisição enviada pelo cliente
+    data = request.get_json()
+
+    #Capitaliza as chaves enviadas na requisição, pelo cliente, evitando conflitos
+    data_formatada = {chave.capitalize(): valor for chave, valor in data.items()}
+
+    # Bloqueia alteração do usuário/autor, caso o cliente tente enviar a troca pela requisição
+    if 'Autor' in data_formatada or 'Titulo' in data_formatada:
+        raise BadRequest("Não é permitido alterar o autor ou titulo de uma mensagem por esse método.")
+    
+    identidade = get_jwt_identity()
+    claims = get_jwt()
+    perfil = claims.get('perfil')
+
+    if perfil != 'ADMIN' and mensagem.autor != int(identidade):
+        raise Forbidden('Você não tem autorização para alterar essa mensagem!')
+
+    #Atualiza as informações no banco de dados(caso não haja dados na requisição, permanece os valores que já estavam)
+    mensagem.titulo = data_formatada.get('Titulo', mensagem.titulo)
+    mensagem.conteudo = data_formatada.get('Conteudo', mensagem.conteudo)
     db.session.commit()
     #retorna a mensagem atualizada
     return jsonify(mensagem.json()), 200

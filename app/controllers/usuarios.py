@@ -93,7 +93,7 @@ def criar_usuario():
     return jsonify(novo.json()), 201
 
 #Endpoint para UPDATE
-@user_bp.route('/<int:id>', methods=['PUT'])
+@user_bp.route('/<int:id>', methods=['PATCH'])
 @jwt_required()
 @perfil_required(['ADMIN', 'USER'])
 def atualizar_usuario(id):
