@@ -147,21 +147,12 @@ def atualizar_usuario(id):
 #Endpoint para DELETE
 @user_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
-@perfil_required(['ADMIN', 'USER'])
+@perfil_required(['ADMIN'])
 def deletar_usuario(id):
     #Procura um usuário especifico, de acordo com o ID que estiver na URL
     usuario = Usuario.query.get(id)
     if not usuario:
         raise NotFound("Usuário não existe, tente outro ID!")
-
-    identidade = get_jwt_identity()
-    claims = get_jwt()
-    perfil = claims.get('perfil')
-
-    print(f"[DEBUG] perfil={perfil}, usuario.id={usuario.id}, identidade={identidade}")
-    
-    if perfil != 'ADMIN' and usuario.id != int(identidade):
-        raise Forbidden('Você não tem autorização para deletar esse usuário!')
 
     #Apaga o usuário do banco de dados
     db.session.delete(usuario)
