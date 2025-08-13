@@ -42,12 +42,15 @@ def refresh():
     #Pega os dados de identidade que foram definidios no token
     identidade = get_jwt_identity()
 
+    if not token:
+        raise Unauthorized('Token JWT ausente ou inválido')
+
     #Verifica o ID do token que está no banco de dados
     token_db = Token.query.filter_by(jti=jti).first()
 
     # Se o ID que estiver no DB não for o mesmo do token enviado na requisição, ou o token enviado estiver inválido, é retornado um erro tratado.
     if not token_db or not token_db.valido:
-        raise Forbidden('Token enviado não é válido.')
+        raise Forbidden('Token .')
     
     #Caso o Token seja valido e coincida com o ID que está no DB, então invalida o token antigo
     token_db.valido = False

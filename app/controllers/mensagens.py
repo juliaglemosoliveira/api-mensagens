@@ -6,7 +6,7 @@ from werkzeug.exceptions import NotFound, BadRequest, Unauthorized, Forbidden
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app.utils.auth_utils import perfil_required
 
-msg_bp = Blueprint('mensagens', __name__)
+msg_bp = Blueprint('msg_bp', __name__)
 
 # READ - ALL
 @msg_bp.route('/', methods=['GET'])
@@ -30,13 +30,18 @@ def criar_mensagem():
     data = request.get_json()
 
     if 'titulo' not in data or 'conteudo' not in data:
-        raise BadRequest("Os campos 'titulo' e 'conteudo' devem ser preenchidos adequadamente!")
+        raise BadRequest("Os campos 'titulo' e 'conteudo' são obrigatórios no corpo da requisição!")
 
+
+    token = get_jwt()
+    if not token:
+        raise Unauthorized('Token JWT ausente ou inválido.')
+    
     titulo = data.get('titulo')
     conteudo = data.get('conteudo')
 
     if not titulo or not conteudo or not titulo.strip() or not conteudo.strip():
-        raise BadRequest('É obrigatório o preenchimento do nome e comentário.')
+        return jsonify({"errors": {"titulo": ["Campo obrigatório."], "conteudo":["Campo obrigatório."]}}), 422
 
     identidade = get_jwt_identity()
 
@@ -57,18 +62,28 @@ def atualizar_mensagem(id):
 
     data = request.get_json()
 
+    identidade = get_jwt_identity()
+    token = get_jwt()
+    perfil = token.get('perfil')
+
+    mensagem.titulo = data.get('titulo')
+    mensagem.conteudo = data.get('conteudo')
+
+    ##CRIAR VERIFICAÇÃO DE TITULO E CONTEUDO
+
     if 'autor' in data:
         raise BadRequest("Não é permitido alterar o autor de uma mensagem.")
 
-    identidade = get_jwt_identity()
-    claims = get_jwt()
-    perfil = claims.get('perfil')
+    if not token:
+        raise Unauthorized('Token JWT ausente ou inválido')
 
     if perfil != 'ADMIN' and mensagem.autor != int(identidade):
-        raise Forbidden('Você não tem autorização para alterar essa mensagem!')
+        raise Forbidden('Você não tem autorização para alterar esta mensagem!')
+    
 
-    mensagem.titulo = data.get('titulo', mensagem.titulo)
-    mensagem.conteudo = data.get('conteudo', mensagem.conteudo)
+
+
+
     db.session.commit()
 
     return jsonify(mensagem.json()), 200

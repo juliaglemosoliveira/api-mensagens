@@ -12,12 +12,14 @@ def converter_fuso(data_hora, tz_cliente='America/Sao_Paulo'):
 
     fuso_cliente = pytz.timezone(tz_cliente)
     conversao = data_hora.astimezone(fuso_cliente)
-    return conversao.strftime('%d-%m-%Y %H:%M')
+    return conversao
 
 import re
    
 @staticmethod
 def validar_email(email):   
+    if email.strip() == '':
+        return ''
     if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
         return "E-MAIL INVÁLIDO! O E-mail precisa ser, por exemplo: algumacoisa@dominio.com"
     return True

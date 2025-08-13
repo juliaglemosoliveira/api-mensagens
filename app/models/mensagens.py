@@ -7,7 +7,7 @@ class Mensagem(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     titulo = db.Column(db.String(50), nullable=False)
     conteudo = db.Column(db.String(200), nullable=False)
-    data_hora = db.Column(db.DateTime, default=datetime.utcnow)
+    data_hora = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     autor = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, default=1)
 
     comentarios = db.relationship('Comentario', backref='mensagens', lazy='select', cascade='all, delete-orphan')
@@ -17,6 +17,6 @@ class Mensagem(db.Model):
             "id": self.id,
             "titulo":self.titulo,
             "conteudo": self.conteudo,
-            "data_hora":converter_fuso(self.data_hora, tz_cliente),
+            "data_hora":converter_fuso(self.data_hora, tz_cliente).isoformat(),
             "autor": self.autor,
             "comentario": [comentario.json() for comentario in self.comentarios]}
