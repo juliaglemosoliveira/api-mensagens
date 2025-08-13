@@ -66,10 +66,11 @@ def atualizar_mensagem(id):
     token = get_jwt()
     perfil = token.get('perfil')
 
-    mensagem.titulo = data.get('titulo')
-    mensagem.conteudo = data.get('conteudo')
+    titulo = data.get('titulo')
+    conteudo = data.get('conteudo')
 
-    ##CRIAR VERIFICAÇÃO DE TITULO E CONTEUDO
+    if not titulo or not conteudo or not titulo.strip() or not conteudo.strip():
+        return jsonify({"errors": {"titulo": ["Campo obrigatório."], "conteudo":["Campo obrigatório."]}}), 422
 
     if 'autor' in data:
         raise BadRequest("Não é permitido alterar o autor de uma mensagem.")
@@ -80,10 +81,8 @@ def atualizar_mensagem(id):
     if perfil != 'ADMIN' and mensagem.autor != int(identidade):
         raise Forbidden('Você não tem autorização para alterar esta mensagem!')
     
-
-
-
-
+    mensagem.titulo = titulo
+    mensagem.conteudo = conteudo
     db.session.commit()
 
     return jsonify(mensagem.json()), 200
@@ -99,17 +98,25 @@ def modificar_mensagem(id):
 
     data = request.get_json()
 
+    identidade = get_jwt_identity()
+    token = get_jwt()
+    perfil = token.get('perfil')
+
+    conteudo = data.get('conteudo')
+
+    if not conteudo or not conteudo.strip():
+        return jsonify({"errors": {"titulo": ["Campo obrigatório."]}}), 422
+
     if 'autor' in data or 'titulo' in data:
         raise BadRequest("Não é permitido alterar o autor ou titulo de uma mensagem por esse método.")
 
-    identidade = get_jwt_identity()
-    claims = get_jwt()
-    perfil = claims.get('perfil')
+    if not token:
+        raise Unauthorized('Token JWT ausente ou inválido')
 
     if perfil != 'ADMIN' and mensagem.autor != int(identidade):
         raise Forbidden('Você não tem autorização para alterar essa mensagem!')
 
-    mensagem.conteudo = data.get('conteudo', mensagem.conteudo)
+    mensagem.conteudo = conteudo
     db.session.commit()
 
     return jsonify(mensagem.json()), 200
@@ -124,8 +131,11 @@ def deletar_mensagem(id):
         raise NotFound("Mensagem não encontrada, tente outro ID!")
 
     identidade = get_jwt_identity()
-    claims = get_jwt()
-    perfil = claims.get('perfil')
+    token = get_jwt()
+    perfil = token.get('perfil')
+
+    if not token:
+        return jsonify({"error": "Token JWT ausente ou inválido"}), 422
 
     if perfil != 'ADMIN' and mensagem.autor != int(identidade):
         raise Forbidden('Você não tem permissão para apagar essa mensagem!')
@@ -149,16 +159,23 @@ def comentarios_por_mensagem(mensagem_id):
 def criar_comentario(mensagem_id):
     data = request.get_json()
 
-    if 'conteudo' not in data:
-        raise BadRequest("O campo 'conteudo' deve ser preenchido adequadamente!")
-
     conteudo = data.get('conteudo')
+
+    identidade = get_jwt_identity()
+    token = get_jwt()
 
     mensagem = Mensagem.query.get(mensagem_id)
     if not mensagem:
         raise NotFound('Nenhuma mensagem com esse ID, tente outro!')
+    
+    if 'conteudo' not in data:
+        raise BadRequest("O campo 'conteudo' deve ser preenchido adequadamente!")
 
-    identidade = get_jwt_identity()
+    if not token:
+        raise Unauthorized({"Token JWT ausente ou inválido"})
+    
+    if not conteudo or not conteudo.strip():
+        return jsonify({"errors": {"conteudo": ["Campo obrigatório."]}}), 422
 
     novo_comentario = Comentario(conteudo=conteudo, mensagem_id=mensagem_id, autor=identidade)
     db.session.add(novo_comentario)
@@ -177,19 +194,28 @@ def atualizar_comentario(mensagem_id, comentario_id):
 
     data = request.get_json()
 
+    conteudo = data.get('conteudo')
+
+    identidade = get_jwt_identity()
+    token = get_jwt()
+    perfil = token.get('perfil')
+
     if 'conteudo' not in data:
         raise BadRequest("O campo 'conteudo' deve ser preenchido adequadamente")
+    
     if 'autor' in data or 'mensagem_id' in data:
         raise BadRequest('Não é permitido alterar o autor ou mensagem_id de um comentário.')
 
-    identidade = get_jwt_identity()
-    claims = get_jwt()
-    perfil = claims.get('perfil')
+    if not token:
+        raise Unauthorized("Token JWT ausente ou inválido")
+    
+    if not conteudo or not conteudo.strip():
+        return jsonify({"errors": {"conteudo": ["Campo obrigatório."]}}), 422
 
     if perfil != 'ADMIN' and comentario.autor != int(identidade):
-        raise Forbidden('Você não tem autorização para alterar esse comentário!')
+        raise Forbidden('Você não tem permissão para alterar esse comentário!')
 
-    comentario.conteudo = data.get('conteudo', comentario.conteudo)
+    comentario.conteudo = conteudo
     db.session.commit()
     return jsonify(comentario.json()), 200
 
@@ -203,8 +229,11 @@ def deletar_comentario(mensagem_id, comentario_id):
         raise NotFound('Nenhum comentário com esse ID, tente outro!')
 
     identidade = get_jwt_identity()
-    claims = get_jwt()
-    perfil = claims.get('perfil')
+    token = get_jwt()
+    perfil = token.get('perfil')
+
+    if not token:
+        raise Unauthorized('Token JWT ausente ou inválido.')
 
     if perfil != 'ADMIN' and comentario.autor != int(identidade):
         raise Forbidden('Você não tem autorização para deletar esse comentário!')

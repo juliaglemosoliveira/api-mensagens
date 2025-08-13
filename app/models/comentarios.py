@@ -15,4 +15,4 @@ class Comentario(db.Model):
                 'conteudo':self.conteudo,
                 'autor':self.autor,
                 'mensagem_id':self.mensagem_id,
-                'data_hora': converter_fuso(self.data_hora, tz_cliente)}
+                'data_hora': converter_fuso(self.data_hora, tz_cliente).isoformat()}
