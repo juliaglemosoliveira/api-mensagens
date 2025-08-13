@@ -58,7 +58,7 @@ def criar_usuario():
 
     # Verifica se o email foi enviado e se tem formato válido
     if not email or not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
-        erros = ["email"] = ["Campo obrigatório."]
+        erros["email"] = ["Campo obrigatório."]
 
     if erros:
         return jsonify({'errors':erros}), 422
@@ -100,7 +100,7 @@ def atualizar_usuario(id):
 
     # Verifica se o email foi enviado e se tem formato válido
     if not email or not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
-        erros = ["email"] = ["Campo obrigatório."]
+        erros["email"] = ["Campo obrigatório."]
 
     if erros:
         return jsonify({'errors':erros}), 422
