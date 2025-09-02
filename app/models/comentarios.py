@@ -10,9 +10,9 @@ class Comentario(db.Model):
     mensagem_id = db.Column(db.Integer, db.ForeignKey('mensagens.id'))
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
 
-  #  def json(self, tz_cliente='America/Sao_Paulo'):
-   #     return {'id':self.id,   
-   #             'conteudo':self.conteudo,
-   #             'autor':self.autor,
-   #             'mensagem_id':self.mensagem_id,
-   #             'data_criacao': converter_fuso(self.data_criacao, tz_cliente).isoformat()}
+    def json(self, tz_cliente='America/Sao_Paulo'):
+      return {'id':self.id,   
+             'conteudo':self.conteudo,
+               'autor':self.autor,
+               'mensagem_id':self.mensagem_id,
+               'data_criacao': converter_fuso(self.data_criacao, tz_cliente).isoformat()}

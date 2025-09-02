@@ -142,7 +142,7 @@ def deletar_mensagem(id):
 
     db.session.delete(mensagem)
     db.session.commit()
-    return {"Mensagem": "Mensagem excluída com sucesso!"}, 200
+    return {"Mensagem": "Mensagem excluída com sucesso!"}, 204
 
 # Comentários - READ
 @msg_bp.route('/<int:mensagem_id>/comentarios', methods=['GET'])

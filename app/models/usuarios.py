@@ -10,4 +10,10 @@ class Usuario(db.Model):
 
     mensagens = db.relationship('Mensagem', backref='usuarios', lazy='select', cascade='all, delete-orphan')
     comentarios = db.relationship('Comentario', backref='usuarios', lazy='select', cascade='all, delete-orphan')
- 
+    
+    def json(self):
+        return {
+            'id': self.id,
+            'nome': self.nome,
+            'email': self.email,
+            'perfil': self.perfil}

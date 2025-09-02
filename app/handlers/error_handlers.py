@@ -42,12 +42,12 @@ def register_error_handlers_global(app):
             return jsonify({'Mensagem': descricao}), 409
         return jsonify({'Mensagem': 'Conflito de dados.'}), 409
     
-    @app.errorhandler(InternalServerError)
-    def handle_internal_error(e):
-        return jsonify({'Mensagem': 'Erro interno do servidor!'}), 500
+    # @app.errorhandler(InternalServerError)
+    # def handle_internal_error(e):
+    #     return jsonify({'Mensagem': 'Erro interno do servidor!'}), 500
     
-    @app.errorhandler(Exception)
-    def error_handler_exceptions(e):
-        return jsonify({'Mensagem': 'Erro inesperado!'}), 500  
+    # @app.errorhandler(Exception)
+    # def error_handler_exceptions(e):
+    #     return jsonify({'Mensagem': 'Erro inesperado!'}), 500  
     
     
