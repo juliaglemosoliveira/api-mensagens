@@ -3,19 +3,23 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from app.handlers.error_handlers import register_error_handlers_global
 from flask_jwt_extended import JWTManager
+from flask_marshmallow import Marshmallow
 
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
+ma = Marshmallow()
 
 def create_app():
 
     app = Flask(__name__)
     app.config.from_object('config.config')
+    app.json.sort_keys = False
     
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    ma.init_app(app)
 
     register_error_handlers_global(app)
 

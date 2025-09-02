@@ -15,25 +15,26 @@ def converter_fuso(data_hora, tz_cliente='America/Sao_Paulo'):
     return conversao
 
 import re
-   
-@staticmethod
+from marshmallow import ValidationError
+
+#Validar e-mail
 def validar_email(email):   
-    if email.strip() == '':
-        return ''
     if not re.match(r"^[^@]+@[^@]+\.[^@]+$", email):
-        return "E-MAIL INVÁLIDO! O E-mail precisa ser, por exemplo: algumacoisa@dominio.com"
-    return True
-    
-@staticmethod
+        raise ValidationError ("E-MAIL INVÁLIDO! O E-mail precisa ser, por exemplo: email@dominio.com")
+    return email
+
+#Validar senha
 def validar_senha(senha):
-    if not re.match(r'^[A-Za-z0-9@!%*?&]+$', senha):
-        return "SENHA INVÁLIDA! A senha só pode conter esses caracteres: A-Z, a-z, 0-9, @!%*?&"
-    
-    if (len(senha) < 8      or
-        not re.search(r'[0-9]', senha) or
-        not re.search(r'[A-Z]', senha) or
-        not re.search(r'[a-z]', senha) or
-        not re.search(r'[@!%*?&]', senha)):
-        return "SENHA INVÁLIDA! A Senha deve ser mais que 8 digitos e conter pelo menos um desses caracteres:0-9, A-Z, a-z, @!%*?&"
-       
-    return True
+    #if not re.match(r'^[A-Za-z0-9@!%*?&]+$', senha):
+     #   raise ValidationError("SENHA INVÁLIDA! A senha só pode conter esses caracteres: A-Z, a-z, 0-9, @!%*?&")
+    if len(senha) < 6:
+        raise ValidationError('A senha precisa ser mais do que 8 caracteres')
+    if not re.search(r'[0-9]', senha):
+        raise ValidationError('A senha precisa conter pelo menos um número')
+    if not re.search(r'[A-Z]', senha):
+        raise ValidationError('A senha precisa conter pelo menos uma letra maiúsucla!')
+    if not re.search(r'[a-z]', senha):
+        raise ValidationError('A senha precisa conter pelo menos uma letra minúsucla.')
+    if not re.search(r'[@!%*?&]', senha):
+        raise ValidationError('A senha precisa conter pelo menos um desses caracteres especiais: @!%*?&')
+    return senha

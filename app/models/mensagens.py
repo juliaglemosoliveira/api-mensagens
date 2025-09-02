@@ -7,8 +7,8 @@ class Mensagem(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     titulo = db.Column(db.String(50), nullable=False)
     conteudo = db.Column(db.String(200), nullable=False)
-    data_criacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     autor = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False, default=1)
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     comentarios = db.relationship('Comentario', backref='mensagens', lazy='select', cascade='all, delete-orphan')
 
